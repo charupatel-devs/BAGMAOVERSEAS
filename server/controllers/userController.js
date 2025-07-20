@@ -206,9 +206,7 @@ exports.getGoogleAuthUrl = catchAsync(async (req, res, next) => {
 // @route   GET /api/user/profile
 // @access  Private
 exports.getUserProfile = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.user._id)
-    .populate("wishlist", "name price images stock")
-    .select("-password");
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     return next(new AppError("User not found", 404));
@@ -622,60 +620,43 @@ exports.getUserAddresses = catchAsync(async (req, res, next) => {
     count: user.addresses.length,
   });
 });
-
+//
 // @desc    Add new address
 // @route   POST /api/user/addresses
 // @access  Private
 exports.addUserAddress = catchAsync(async (req, res, next) => {
   const {
-    type,
-    name,
-    phone,
-    addressLine1,
-    addressLine2,
+    nameOrCompany,
+    fullAddress,
     city,
     state,
-    postalCode,
+    zipCode,
     country,
     isDefault,
   } = req.body;
 
   // Validation
-  if (!name || !phone || !addressLine1 || !city || !state || !postalCode) {
+  if (!nameOrCompany || !city || !state || !zipCode) {
     return next(
       new AppError("Please provide all required address fields", 400)
     );
   }
 
-  // Validate phone number format
-  if (!/^[0-9]{10}$/.test(phone)) {
-    return next(
-      new AppError("Please provide a valid 10-digit phone number", 400)
-    );
-  }
-
-  // Validate postal code (basic validation)
-  if (!/^[0-9]{6}$/.test(postalCode)) {
+  if (!/^[0-9]{6}$/.test(zipCode)) {
     return next(
       new AppError("Please provide a valid 6-digit postal code", 400)
     );
   }
 
   const user = await User.findById(req.user._id);
-
-  if (!user) {
-    return next(new AppError("User not found", 404));
-  }
+  if (!user) return next(new AppError("User not found", 404));
 
   const addressData = {
-    type: type || "home",
-    name,
-    phone,
-    addressLine1,
-    addressLine2,
+    nameOrCompany,
+    fullAddress: fullAddress || "",
     city,
     state,
-    postalCode,
+    zipCode,
     country: country || "India",
     isDefault: isDefault || false,
   };
@@ -695,53 +676,34 @@ exports.addUserAddress = catchAsync(async (req, res, next) => {
 exports.updateUserAddress = catchAsync(async (req, res, next) => {
   const { addressId } = req.params;
   const {
-    type,
-    name,
-    phone,
-    addressLine1,
-    addressLine2,
+    nameOrCompany,
+    fullAddress,
     city,
     state,
-    postalCode,
+    zipCode,
     country,
     isDefault,
   } = req.body;
 
   const user = await User.findById(req.user._id);
+  if (!user) return next(new AppError("User not found", 404));
 
-  if (!user) {
-    return next(new AppError("User not found", 404));
-  }
-
-  // Check if address exists
   const addressExists = user.addresses.id(addressId);
-  if (!addressExists) {
-    return next(new AppError("Address not found", 404));
-  }
+  if (!addressExists) return next(new AppError("Address not found", 404));
 
-  // Validate phone number if provided
-  if (phone && !/^[0-9]{10}$/.test(phone)) {
-    return next(
-      new AppError("Please provide a valid 10-digit phone number", 400)
-    );
-  }
-
-  // Validate postal code if provided
-  if (postalCode && !/^[0-9]{6}$/.test(postalCode)) {
+  if (zipCode && !/^[0-9]{6}$/.test(zipCode)) {
     return next(
       new AppError("Please provide a valid 6-digit postal code", 400)
     );
   }
 
   const updateData = {};
-  if (type) updateData.type = type;
-  if (name) updateData.name = name;
-  if (phone) updateData.phone = phone;
-  if (addressLine1) updateData.addressLine1 = addressLine1;
-  if (addressLine2 !== undefined) updateData.addressLine2 = addressLine2;
+
+  if (nameOrCompany) updateData.nameOrCompany = nameOrCompany;
+  if (fullAddress !== undefined) updateData.fullAddress = fullAddress;
   if (city) updateData.city = city;
   if (state) updateData.state = state;
-  if (postalCode) updateData.postalCode = postalCode;
+  if (zipCode) updateData.zipCode = zipCode;
   if (country) updateData.country = country;
   if (isDefault !== undefined) updateData.isDefault = isDefault;
 

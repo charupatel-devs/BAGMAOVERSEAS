@@ -165,6 +165,27 @@ const AddSingleProduct = ({
               required
             />
           </div>
+          {/* GST Field - Add this after price fields */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              GST (%) <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="gst"
+              value={formData.gst}
+              onChange={handleInputChange}
+              placeholder="Enter GST percentage"
+              min="0"
+              max="100"
+              step="0.01"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+            <p className="text-xs text-gray-500">
+              Standard GST rates: 5%, 12%, 18%, 28%
+            </p>
+          </div>
         </div>
       </div>
 

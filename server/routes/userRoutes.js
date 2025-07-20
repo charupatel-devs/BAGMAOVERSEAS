@@ -49,27 +49,52 @@ router.put("/reset-password/:token", resetPassword);
 // GOOGLE OAUTH ROUTES
 // ===========================================
 
-// Get Google OAuth URL for frontend
-router.get("/auth/google/url", getGoogleAuthUrl);
+// userRoutes.js - Complete OAuth implementation
 
-// Initiate Google OAuth
-router.get(
-  "/auth/google",
+// Helper function to decode OAuth parameters
+const decodeOAuthCode = (req, res, next) => {
+  if (req.query.code) {
+    // Handle HTML entity encoding
+    let decodedCode = req.query.code
+      .replace(/&#x2F;/g, "/")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#x27;/g, "'");
+
+    // Handle URL encoding
+    try {
+      decodedCode = decodeURIComponent(decodedCode);
+    } catch (e) {
+      console.log("Failed to decode URL component:", e.message);
+    }
+
+    req.query.code = decodedCode;
+    console.log("Original code:", req.query.code);
+    console.log("Decoded code:", decodedCode);
+  }
+  next();
+};
+
+// Google OAuth initiation
+router.get("/auth/google", (req, res, next) => {
+  console.log("Initiating Google OAuth...");
   passport.authenticate("google", {
     scope: ["profile", "email"],
-  })
-);
+  })(req, res, next);
+});
 
-// Google OAuth callback
+// Google OAuth callback with decoding
 router.get(
   "/auth/google/callback",
+  decodeOAuthCode,
   passport.authenticate("google", {
     failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth_failed`,
     session: false,
   }),
   googleCallback
 );
-
 // ===========================================
 // PROTECTED ROUTES (Authentication required)
 // ===========================================

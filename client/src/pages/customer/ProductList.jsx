@@ -1,374 +1,30 @@
 import {
   ChevronRight,
-  Eye,
   Filter,
-  Grid,
   Heart,
-  List,
+  Loader2,
   Package,
   ShoppingCart,
-  Star,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-// Real BAGMA product data with unique IDs
-const products = [
-  {
-    id: "cotton-tufted-bath-mats-50x80",
-    slug: "cotton-tufted-bath-mats-50x80",
-    name: "Cotton Tufted Bath Mats",
-    category: "bath-mats",
-    price: 450,
-    originalPrice: 600,
-    rating: 4.5,
-    reviews: 28,
-    image:
-      "https://images.unsplash.com/photo-1584622781564-1d987ce3d4d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "100% Cotton Tufted Bath Mats, GSM 1800, Size 50x80 cm. Anti-slip hot melt latex backing.",
-    features: [
-      "Anti-slip backing",
-      "100% Cotton",
-      "GSM 1800",
-      "Machine washable",
-    ],
-    inStock: true,
-    discount: 25,
-  },
-  {
-    id: "micro-polyester-flower-door-mat",
-    slug: "micro-polyester-flower-door-mat",
-    name: "Micro Polyester Flower Door Mat",
-    category: "door-mats",
-    price: 55,
-    originalPrice: 75,
-    rating: 4.3,
-    reviews: 15,
-    image:
-      "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "Micro Polyester Door Mats, Size 16x24 inches. Beautiful butterfly design.",
-    features: [
-      "Micro Polyester",
-      "Designer patterns",
-      "Lightweight",
-      "Multi-colored",
-    ],
-    inStock: true,
-    discount: 27,
-  },
-  {
-    id: "hotel-bath-rugs-60x88",
-    slug: "hotel-bath-rugs-60x88",
-    name: "Hotel Bath Rugs",
-    category: "bath-mats",
-    price: 750,
-    originalPrice: 900,
-    rating: 4.7,
-    reviews: 42,
-    image:
-      "https://images.unsplash.com/photo-1515377905703-c4788e51af15?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "Luxurious Hotel Bath Rugs, White, Size 60x88 cm, GSM 1700. Perfect for hospitality sector.",
-    features: [
-      "Luxurious quality",
-      "Hotel grade",
-      "Anti-slip latex",
-      "GSM 1700",
-    ],
-    inStock: true,
-    discount: 17,
-  },
-  {
-    id: 4,
-    name: "Kids Colorful Bath Mats",
-    category: "kids-mats",
-    price: 280,
-    originalPrice: 350,
-    rating: 4.8,
-    reviews: 35,
-    image:
-      "https://images.unsplash.com/photo-1558618020-fde91ad7eaa8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "Car design Kids Bath Mats, Size 40x60 cm. Attractive and colorful for children.",
-    features: [
-      "Kid-friendly design",
-      "Car patterns",
-      "Soft and safe",
-      "Vibrant colors",
-    ],
-    inStock: true,
-    discount: 20,
-  },
-  {
-    id: 5,
-    name: "Handloom Door Mats",
-    category: "door-mats",
-    price: 220,
-    originalPrice: 280,
-    rating: 4.2,
-    reviews: 22,
-    image:
-      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "Cotton Ribbed Handloom Door Mats, Size 16x24 inches. Traditional craftsmanship.",
-    features: [
-      "Handloom crafted",
-      "Cotton ribbed",
-      "Traditional design",
-      "Reversible",
-    ],
-    inStock: true,
-    discount: 21,
-  },
-  {
-    id: 6,
-    name: "Chenille Bath Mats",
-    category: "bath-mats",
-    price: 580,
-    originalPrice: 720,
-    rating: 4.6,
-    reviews: 18,
-    image:
-      "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "Chenille Bath Mats, Size 50x80 cm, GSM 2000. Soft 2.5mm pile with anti-slip backing.",
-    features: ["Chenille pile", "2.5mm thickness", "GSM 2000", "Ultra soft"],
-    inStock: true,
-    discount: 19,
-  },
-  {
-    id: 7,
-    name: "Round Cotton Bath Mat",
-    category: "bath-mats",
-    price: 380,
-    originalPrice: 450,
-    rating: 4.4,
-    reviews: 12,
-    image:
-      "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "Round Cotton Bath Mat, Diameter 60 cm. Elegant circular design.",
-    features: [
-      "Round shape",
-      "60cm diameter",
-      "Cotton material",
-      "Elegant design",
-    ],
-    inStock: false,
-    discount: 16,
-  },
-  {
-    id: 8,
-    name: "Anti-Slip Door Mats",
-    category: "door-mats",
-    price: 420,
-    originalPrice: 500,
-    rating: 4.5,
-    reviews: 25,
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "TPR Rubberised Anti-Slip Door Mats, Size 15x23 inches. Maximum grip and safety.",
-    features: [
-      "TPR rubber base",
-      "Anti-slip surface",
-      "Weather resistant",
-      "High grip",
-    ],
-    inStock: true,
-    discount: 16,
-  },
-  {
-    id: 8,
-    name: "Anti-Slip Door Mats",
-    category: "door-mats",
-    price: 420,
-    originalPrice: 500,
-    rating: 4.5,
-    reviews: 25,
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "TPR Rubberised Anti-Slip Door Mats, Size 15x23 inches. Maximum grip and safety.",
-    features: [
-      "TPR rubber base",
-      "Anti-slip surface",
-      "Weather resistant",
-      "High grip",
-    ],
-    inStock: true,
-    discount: 16,
-  },
-  {
-    id: 8,
-    name: "Anti-Slip Door Mats",
-    category: "door-mats",
-    price: 420,
-    originalPrice: 500,
-    rating: 4.5,
-    reviews: 25,
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "TPR Rubberised Anti-Slip Door Mats, Size 15x23 inches. Maximum grip and safety.",
-    features: [
-      "TPR rubber base",
-      "Anti-slip surface",
-      "Weather resistant",
-      "High grip",
-    ],
-    inStock: true,
-    discount: 16,
-  },
-  {
-    id: 8,
-    name: "Anti-Slip Door Mats",
-    category: "door-mats",
-    price: 420,
-    originalPrice: 500,
-    rating: 4.5,
-    reviews: 25,
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "TPR Rubberised Anti-Slip Door Mats, Size 15x23 inches. Maximum grip and safety.",
-    features: [
-      "TPR rubber base",
-      "Anti-slip surface",
-      "Weather resistant",
-      "High grip",
-    ],
-    inStock: true,
-    discount: 16,
-  },
-  {
-    id: 8,
-    name: "Anti-Slip Door Mats",
-    category: "door-mats",
-    price: 420,
-    originalPrice: 500,
-    rating: 4.5,
-    reviews: 25,
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "TPR Rubberised Anti-Slip Door Mats, Size 15x23 inches. Maximum grip and safety.",
-    features: [
-      "TPR rubber base",
-      "Anti-slip surface",
-      "Weather resistant",
-      "High grip",
-    ],
-    inStock: true,
-    discount: 16,
-  },
-  {
-    id: 8,
-    name: "Anti-Slip Door Mats",
-    category: "door-mats",
-    price: 420,
-    originalPrice: 500,
-    rating: 4.5,
-    reviews: 25,
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "TPR Rubberised Anti-Slip Door Mats, Size 15x23 inches. Maximum grip and safety.",
-    features: [
-      "TPR rubber base",
-      "Anti-slip surface",
-      "Weather resistant",
-      "High grip",
-    ],
-    inStock: true,
-    discount: 16,
-  },
-  {
-    id: 8,
-    name: "Anti-Slip Door Mats",
-    category: "door-mats",
-    price: 420,
-    originalPrice: 500,
-    rating: 4.5,
-    reviews: 25,
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "TPR Rubberised Anti-Slip Door Mats, Size 15x23 inches. Maximum grip and safety.",
-    features: [
-      "TPR rubber base",
-      "Anti-slip surface",
-      "Weather resistant",
-      "High grip",
-    ],
-    inStock: true,
-    discount: 16,
-  },
-  {
-    id: 8,
-    name: "Anti-Slip Door Mats",
-    category: "door-mats",
-    price: 420,
-    originalPrice: 500,
-    rating: 4.5,
-    reviews: 25,
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-    description:
-      "TPR Rubberised Anti-Slip Door Mats, Size 15x23 inches. Maximum grip and safety.",
-    features: [
-      "TPR rubber base",
-      "Anti-slip surface",
-      "Weather resistant",
-      "High grip",
-    ],
-    inStock: true,
-    discount: 16,
-  },
-];
+// Import your actual service functions - replace with your actual imports
+import { fetchCategories } from "../../services_hooks/admin/adminCategory";
+import { getProducts } from "../../services_hooks/customer/productService";
 
-const categories = [
-  { id: "", name: "All Products", productCount: products.length },
-  { id: "door-mats", name: "Door Mats", productCount: 42 },
-  { id: "hotel-bath-rugs", name: "Hotel Bath Rugs", productCount: 32 },
-  { id: "tufted-bath-mats", name: "Tufted Bath Mats", productCount: 34 },
-  {
-    id: "door-mats-anti-slip",
-    name: "Door Mats - ANTI SLIP",
-    productCount: 28,
-  },
-  {
-    id: "door-mats-handloom",
-    name: "Door Mats - Handloom",
-    productCount: 25,
-  },
-  { id: "runners-anti-slip", name: "Runners - ANTI SLIP", productCount: 15 },
-  {
-    id: "microfiber-cleaning-cloth",
-    name: "Microfiber Cleaning Cloth",
-    productCount: 12,
-  },
-  { id: "carpets", name: "Carpets", productCount: 12 },
-  { id: "bath-mats", name: "Bath Mats", productCount: 38 },
-  { id: "prayer-mats", name: "Prayer Mats", productCount: 24 },
-  { id: "kids-mats", name: "Kids Mats", productCount: 18 },
-  { id: "braided-mats", name: "Braided Mats", productCount: 16 },
-];
-
-// Enhanced Product Card with compact design
-const ProductCard = ({ product, viewMode }) => {
+const ProductCard = ({ product }) => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const navigate = useNavigate();
 
   const handleViewProduct = () => {
-    console.log("Navigate to product:", product.id);
+    navigate(`/products/${product._id || product.id}`);
   };
-
-  const handleQuickView = (e) => {
-    e.stopPropagation();
-    handleViewProduct();
-  };
+  // Check stock status - handles both inStock boolean and stock number
+  const isInStock = product.stock > 0 || product.inStock;
+  const stockCount = product.stock || 0;
 
   return (
     <div
@@ -378,18 +34,27 @@ const ProductCard = ({ product, viewMode }) => {
       {/* Stock Badge */}
       <div
         className={`absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-xs font-medium ${
-          product.inStock
-            ? "bg-green-100 text-green-800"
+          isInStock
+            ? stockCount > 0 && stockCount <= 10
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800"
         }`}
       >
-        {product.inStock ? "In Stock" : "Out of Stock"}
+        {isInStock
+          ? stockCount > 0 && stockCount <= 10
+            ? `Low Stock (${stockCount})`
+            : "In Stock"
+          : "Out of Stock"}
       </div>
 
-      {/* Image Section - Compact */}
+      {/* Image Section */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
-          src={product.image}
+          src={
+            product.images?.[0]?.url ||
+            "https://images.unsplash.com/photo-1584622781564-1d987ce3d4d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+          }
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -408,44 +73,27 @@ const ProductCard = ({ product, viewMode }) => {
         >
           <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
         </button>
-
-        {/* Quick View */}
-        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <button
-            onClick={handleQuickView}
-            className="bg-white/90 backdrop-blur-sm text-[#1B3C53] px-3 py-1 rounded-lg text-sm font-medium hover:bg-[#456882] hover:text-white transition-all duration-200 flex items-center gap-1"
-          >
-            <Eye className="w-3 h-3" />
-            Quick View
-          </button>
-        </div>
       </div>
 
-      {/* Content Section - Compact */}
+      {/* Content Section */}
       <div className="p-4">
         <div className="flex items-start justify-between mb-2">
           <h3 className="text-sm font-bold text-[#1B3C53] group-hover:text-[#456882] transition-colors line-clamp-2 flex-1 leading-tight">
             {product.name}
           </h3>
-          <div className="flex items-center gap-1 text-yellow-500 ml-2">
-            <Star className="w-3 h-3 fill-current" />
-            <span className="text-xs font-medium text-gray-600">
-              {product.rating}
-            </span>
-          </div>
         </div>
 
         <p className="text-gray-600 text-xs mb-3 line-clamp-1">
           {product.description}
         </p>
 
-        {/* Price Section - Compact */}
+        {/* Price Section */}
         <div className="mb-3">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-[#1B3C53]">
               ₹{product.price}
             </span>
-            {product.originalPrice > product.price && (
+            {product.originalPrice && product.originalPrice > product.price && (
               <span className="text-gray-500 line-through text-sm">
                 ₹{product.originalPrice}
               </span>
@@ -458,7 +106,7 @@ const ProductCard = ({ product, viewMode }) => {
           </div>
         </div>
 
-        {/* Action Buttons - Compact */}
+        {/* Action Buttons */}
         <div className="space-y-2">
           <button
             onClick={(e) => {
@@ -466,13 +114,13 @@ const ProductCard = ({ product, viewMode }) => {
               console.log("Added to cart:", product.name);
             }}
             className={`w-full py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              product.inStock
+              isInStock
                 ? "bg-gradient-to-r from-[#456882] to-[#1B3C53] text-white hover:shadow-md"
                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
             }`}
-            disabled={!product.inStock}
+            disabled={!isInStock}
           >
-            {product.inStock ? (
+            {isInStock ? (
               <div className="flex items-center justify-center gap-2">
                 <ShoppingCart className="w-4 h-4" />
                 Add to Cart
@@ -499,12 +147,17 @@ const ProductCard = ({ product, viewMode }) => {
 
 // Sidebar Filter Component
 const FilterSidebar = ({
+  categories,
   selectedCategory,
   setSelectedCategory,
   priceRange,
   setPriceRange,
   sortBy,
   setSortBy,
+  sortOrder,
+  setSortOrder,
+  localFilters,
+  setLocalFilters,
   onClearFilters,
   isMobile,
   isOpen,
@@ -531,37 +184,102 @@ const FilterSidebar = ({
         <div className="space-y-2">
           {categories.map((category) => (
             <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
+              key={category._id || category.id}
+              onClick={() => setSelectedCategory(category._id || category.id)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                selectedCategory === category.id
+                selectedCategory === (category._id || category.id)
                   ? "bg-[#456882] text-white"
                   : "text-[#1B3C53] hover:bg-[#F9F3EF]"
               }`}
             >
               <div className="flex items-center justify-between">
                 <span>{category.name}</span>
-                <span className="text-xs opacity-75">({category.count})</span>
+                <span className="text-xs opacity-75">
+                  ({category.productCount || category.count || 0})
+                </span>
               </div>
             </button>
           ))}
         </div>
       </div>
 
+      {/* Stock Status Filters */}
+      {localFilters && (
+        <div>
+          <h3 className="text-lg font-bold text-[#1B3C53] mb-4">
+            Stock Status
+          </h3>
+          <div className="space-y-2">
+            {["in-stock", "low-stock", "out-of-stock"].map((status) => (
+              <label
+                key={status}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={localFilters.stockStatus?.includes(status)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setLocalFilters((prev) => ({
+                        ...prev,
+                        stockStatus: [...(prev.stockStatus || []), status],
+                      }));
+                    } else {
+                      setLocalFilters((prev) => ({
+                        ...prev,
+                        stockStatus: (prev.stockStatus || []).filter(
+                          (s) => s !== status
+                        ),
+                      }));
+                    }
+                  }}
+                  className="rounded border-[#D2C1B6] text-[#456882] focus:ring-[#456882]"
+                />
+                <span className="text-sm capitalize text-[#1B3C53]">
+                  {status.replace("-", " ")}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Price Range */}
       <div>
         <h3 className="text-lg font-bold text-[#1B3C53] mb-4">Price Range</h3>
         <div className="space-y-3">
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Min"
+              value={priceRange[0]}
+              onChange={(e) =>
+                setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])
+              }
+              className="w-1/2 border border-[#D2C1B6] rounded-lg px-3 py-2 text-sm"
+            />
+            <input
+              type="number"
+              placeholder="Max"
+              value={priceRange[1]}
+              onChange={(e) =>
+                setPriceRange([priceRange[0], parseInt(e.target.value) || 2000])
+              }
+              className="w-1/2 border border-[#D2C1B6] rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
           <input
             type="range"
             min="0"
-            max="1000"
+            max="2000"
             value={priceRange[1]}
-            onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+            onChange={(e) =>
+              setPriceRange([priceRange[0], parseInt(e.target.value)])
+            }
             className="w-full h-2 bg-[#D2C1B6] rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex items-center justify-between text-sm text-[#1B3C53] font-medium">
-            <span>₹0</span>
+            <span>₹{priceRange[0]}</span>
             <span>₹{priceRange[1]}</span>
           </div>
         </div>
@@ -570,17 +288,30 @@ const FilterSidebar = ({
       {/* Sort By */}
       <div>
         <h3 className="text-lg font-bold text-[#1B3C53] mb-4">Sort By</h3>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="w-full border border-[#D2C1B6] rounded-lg px-3 py-2 bg-white text-[#1B3C53] focus:outline-none focus:ring-2 focus:ring-[#456882] text-sm"
-        >
-          <option value="name">Name A-Z</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="price-high">Price: High to Low</option>
-          <option value="rating">Highest Rated</option>
-          <option value="discount">Best Discount</option>
-        </select>
+        <div className="space-y-3">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full border border-[#D2C1B6] rounded-lg px-3 py-2 bg-white text-[#1B3C53] focus:outline-none focus:ring-2 focus:ring-[#456882] text-sm"
+          >
+            <option value="name">Name</option>
+            <option value="price">Price</option>
+            <option value="createdAt">Date Created</option>
+            <option value="rating">Rating</option>
+            <option value="stock">Stock</option>
+          </select>
+
+          {setSortOrder && (
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="w-full border border-[#D2C1B6] rounded-lg px-3 py-2 bg-white text-[#1B3C53] focus:outline-none focus:ring-2 focus:ring-[#456882] text-sm"
+            >
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          )}
+        </div>
       </div>
 
       {/* Clear Filters */}
@@ -625,65 +356,122 @@ const FilterSidebar = ({
 
 // Main ProductList Component
 const ProductList = () => {
-  const [filteredProducts, setFilteredProducts] = useState(products);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 1000]);
-  const [sortBy, setSortBy] = useState("name");
-  const [searchTerm, setSearchTerm] = useState("");
+  const dispatch = useDispatch();
+
+  // Redux state - adjust these selectors to match your actual Redux state structure
+  const {
+    products = [],
+    pagination = {},
+    stats = {},
+    isFetching = false,
+    error = null,
+  } = useSelector((state) => state.userProducts || {});
+  const { categories = [] } = useSelector(
+    (state) => state.categories || state.userCategories || {}
+  );
+
+  // Local UI states
   const [viewMode, setViewMode] = useState("grid");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [pageNo, setPageNo] = useState(1);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // Filter and sort logic
+  // Local filter states (optional - depends on your backend implementation)
+  const [localFilters, setLocalFilters] = useState({
+    stockStatus: [],
+    priceRange: { min: "", max: "" },
+    inStock: false,
+    newProduct: false,
+    onSale: false,
+  });
+
+  // Price range state
+  const [priceRange, setPriceRange] = useState([0, 2000]);
+
+  // Fetch categories on mount
   useEffect(() => {
-    let filtered = products;
+    fetchCategories(dispatch);
+  }, [dispatch]);
 
-    if (selectedCategory) {
-      filtered = filtered.filter(
-        (product) => product.category === selectedCategory
-      );
+  // Debounced search function
+  const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
+  // Fetch products function
+  const fetchProducts = useCallback(async () => {
+    try {
+      console.log("Fetching products with filters:");
+      await getProducts(dispatch, {
+        page: pageNo,
+        limit: itemsPerPage,
+        search: searchTerm,
+        category: selectedCategory,
+        status: localFilters.stockStatus.join(","),
+        sortBy: sortBy,
+        sortOrder,
+        minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+        maxPrice: priceRange[1] < 2000 ? priceRange[1] : undefined,
+      });
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
     }
+  }, [
+    dispatch,
+    pageNo,
+    itemsPerPage,
+    selectedCategory,
+    localFilters,
+    sortBy,
+    sortOrder,
+    priceRange,
+  ]);
 
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (product) =>
-          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    filtered = filtered.filter(
-      (product) =>
-        product.price >= priceRange[0] && product.price <= priceRange[1]
-    );
-
-    switch (sortBy) {
-      case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case "rating":
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case "discount":
-        filtered.sort((a, b) => b.discount - a.discount);
-        break;
-      case "name":
-      default:
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-    }
-
-    setFilteredProducts(filtered);
-  }, [selectedCategory, priceRange, sortBy, searchTerm]);
+  // Fetch products when filters change
+  useEffect(() => {
+    fetchProducts();
+  }, [pageNo, itemsPerPage, selectedCategory, localFilters, sortBy, sortOrder]);
 
   const handleClearFilters = () => {
     setSelectedCategory("");
-    setPriceRange([0, 1000]);
-    setSortBy("name");
-    setSearchTerm("");
+    setPriceRange([0, 2000]);
+    setSortBy("createdAt");
+    setSortOrder("desc");
+    setPageNo(1);
+    setLocalFilters({
+      stockStatus: [],
+      priceRange: { min: "", max: "" },
+      inStock: false,
+      newProduct: false,
+      onSale: false,
+    });
   };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPageNo(newPage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  // Client-side search filtering (if you want additional filtering on top of backend)
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
@@ -694,11 +482,11 @@ const ProductList = () => {
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
               Home Textile Products
               <br />
-              <span className="text-[#D2C1B6] ">(ONLINE SALE)</span>
+              <span className="text-[#D2C1B6]">(ONLINE SALE)</span>
             </h1>
 
             <div className="max-w-4xl mx-auto mb-6">
-              <p className="lg:text-XL text-[#D2C1B6]/90 leading-relaxed">
+              <p className="lg:text-xl text-[#D2C1B6]/90 leading-relaxed">
                 <strong>Specializing in:</strong> Door Mats (Cotton, Jute,
                 Anti-Slip Rubberised, TPR Rubber Backed, Colourful, Reversible,
                 Latexed, Hot Melt Latexed, Designer, PVC) • Bath Mats (Cotton,
@@ -708,20 +496,6 @@ const ProductList = () => {
                 Microfiber Cleaning Cloth • etc
               </p>
             </div>
-
-            {/* Search Bar */}
-            {/* <div className="max-w-2xl mx-auto relative">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search for bath mats, door mats, rugs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#D2C1B6] text-sm"
-                />
-              </div>
-            </div> */}
           </div>
         </div>
       </div>
@@ -736,7 +510,10 @@ const ProductList = () => {
             <>
               <ChevronRight className="w-4 h-4" />
               <span className="text-[#456882] font-medium capitalize">
-                {categories.find((c) => c.id === selectedCategory)?.name}
+                {
+                  categories.find((c) => (c._id || c.id) === selectedCategory)
+                    ?.name
+                }
               </span>
             </>
           )}
@@ -760,12 +537,17 @@ const ProductList = () => {
           {/* Desktop Sidebar - Left */}
           <div className="hidden lg:block w-80 flex-shrink-0">
             <FilterSidebar
+              categories={categories}
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
               priceRange={priceRange}
               setPriceRange={setPriceRange}
               sortBy={sortBy}
               setSortBy={setSortBy}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
+              localFilters={localFilters}
+              setLocalFilters={setLocalFilters}
               onClearFilters={handleClearFilters}
               isMobile={false}
             />
@@ -773,12 +555,17 @@ const ProductList = () => {
 
           {/* Mobile Sidebar */}
           <FilterSidebar
+            categories={categories}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             priceRange={priceRange}
             setPriceRange={setPriceRange}
             sortBy={sortBy}
             setSortBy={setSortBy}
+            sortOrder={sortOrder}
+            setSortOrder={setSortOrder}
+            localFilters={localFilters}
+            setLocalFilters={setLocalFilters}
             onClearFilters={handleClearFilters}
             isMobile={true}
             isOpen={isMobileFilterOpen}
@@ -794,44 +581,74 @@ const ProductList = () => {
                   <div className="flex items-center gap-2">
                     <Package className="w-4 h-4 text-[#456882]" />
                     <span className="font-semibold text-[#1B3C53]">
-                      {filteredProducts.length} Products
+                      {isFetching
+                        ? "Loading..."
+                        : `${filteredProducts.length} Products`}
                     </span>
                   </div>
-                  <div className="text-gray-600 text-sm">
-                    {filteredProducts.filter((p) => p.inStock).length} In Stock
-                  </div>
+                  {stats.totalProducts && (
+                    <div className="text-gray-600 text-sm">
+                      Total: {stats.totalProducts}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3">
+                  {/* Items per page */}
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(parseInt(e.target.value));
+                      setPageNo(1);
+                    }}
+                    className="border border-[#D2C1B6] rounded-lg px-3 py-1 text-sm"
+                  >
+                    <option value={5}>5 per page</option>
+                    <option value={12}>12 per page</option>
+                    <option value={24}>24 per page</option>
+                    <option value={48}>48 per page</option>
+                  </select>
+
                   {/* View Toggle */}
-                  <div className="flex items-center bg-[#F9F3EF] rounded-lg p-1">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`p-2 rounded transition-all ${
-                        viewMode === "grid"
-                          ? "bg-[#456882] text-white"
-                          : "text-[#456882] hover:bg-[#D2C1B6]"
-                      }`}
-                    >
-                      <Grid className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`p-2 rounded transition-all ${
-                        viewMode === "list"
-                          ? "bg-[#456882] text-white"
-                          : "text-[#456882] hover:bg-[#D2C1B6]"
-                      }`}
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Products Grid/List */}
-            {filteredProducts.length === 0 ? (
+            {/* Loading State */}
+            {isFetching && (
+              <div className="flex items-center justify-center py-16">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#456882]" />
+                  <span className="text-[#456882] font-medium">
+                    Loading products...
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="text-center py-16">
+                <div className="max-w-md mx-auto">
+                  <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <X className="w-10 h-10 text-red-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#1B3C53] mb-3">
+                    Something went wrong
+                  </h3>
+                  <p className="text-gray-600 mb-6">{error}</p>
+                  <button
+                    onClick={() => fetchProducts()}
+                    className="bg-gradient-to-r from-[#456882] to-[#1B3C53] text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* No Products Found */}
+            {!isFetching && !error && filteredProducts.length === 0 && (
               <div className="text-center py-16">
                 <div className="max-w-md mx-auto">
                   <div className="w-20 h-20 bg-[#D2C1B6] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -851,22 +668,92 @@ const ProductList = () => {
                   </button>
                 </div>
               </div>
-            ) : (
-              <div
-                className={`${
-                  viewMode === "grid"
-                    ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-                    : "space-y-6"
-                }`}
-              >
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    viewMode={viewMode}
-                  />
-                ))}
-              </div>
+            )}
+
+            {/* Products Grid/List */}
+            {!isFetching && !error && filteredProducts.length > 0 && (
+              <>
+                <div
+                  className={`${
+                    viewMode === "grid"
+                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                      : "space-y-6"
+                  }`}
+                >
+                  {filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product._id || product.id}
+                      product={product}
+                      viewMode={viewMode}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    <button
+                      onClick={() => handlePageChange(pageNo - 1)}
+                      disabled={!pagination.hasPrevPage}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        pagination.hasPrevPage
+                          ? "bg-white border border-[#456882] text-[#456882] hover:bg-[#456882] hover:text-white"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      Previous
+                    </button>
+
+                    {/* Page Numbers */}
+                    {Array.from(
+                      { length: Math.min(5, pagination.totalPages) },
+                      (_, i) => {
+                        const pageNum = Math.max(1, pageNo - 2) + i;
+                        if (pageNum > pagination.totalPages) return null;
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
+                              pageNum === pageNo
+                                ? "bg-[#456882] text-white"
+                                : "bg-white border border-[#D2C1B6] text-[#1B3C53] hover:bg-[#F9F3EF]"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      }
+                    )}
+
+                    <button
+                      onClick={() => handlePageChange(pageNo + 1)}
+                      disabled={!pagination.hasNextPage}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        pagination.hasNextPage
+                          ? "bg-white border border-[#456882] text-[#456882] hover:bg-[#456882] hover:text-white"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+
+                {/* Page Info */}
+                {pagination.totalPages > 1 && (
+                  <div className="text-center mt-4 text-sm text-gray-600">
+                    Page {pagination.currentPage || pageNo} of{" "}
+                    {pagination.totalPages}
+                    {pagination.totalProducts && (
+                      <span className="ml-2">
+                        ({pagination.totalProducts} total products)
+                      </span>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -44,6 +44,14 @@ const productSchema = new mongoose.Schema(
       type: String,
       maxlength: [300, "Short description cannot exceed 300 characters"],
     },
+    // Add this field to your productSchema in the product model
+    gst: {
+      type: Number,
+      required: [true, "Please provide GST percentage"],
+      min: [0, "GST cannot be negative"],
+      max: [100, "GST cannot exceed 100%"],
+      default: 18, // Default GST rate in India
+    },
     sku: {
       type: String,
       required: [true, "Please provide SKU"],

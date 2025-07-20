@@ -20,9 +20,24 @@ const Login = () => {
     }, 1000);
   };
 
-  const handleGoogleLogin = () => {
-    if (disabled) return;
-    initiateGoogleLogin();
+  // Update your frontend service
+  const initiateGoogleAuth = async (dispatch) => {
+    // dispatch(UserLoginStart());
+
+    try {
+      console.log("Redirecting to Google OAuth via Passport...");
+
+      // Direct redirect - no API call needed
+      window.location.href = `http://localhost:5001/api/user/auth/google`;
+    } catch (error) {
+      // dispatch(UserLoginFailure("Failed to initiate Google authentication"));
+      throw error;
+    }
+  };
+
+  // Update your register component
+  const handleGoogleLogin = async () => {
+    initiateGoogleAuth();
   };
   const handleGuestContinue = () => {
     console.log("Continue as guest");
@@ -157,7 +172,7 @@ const Login = () => {
 
               <button
                 onClick={handleEmailLogin}
-                disabled={isLoading || !email || !password}
+                // disabled={isLoading || !email || !password}
                 className="w-full bg-gradient-to-r from-[#456882] to-[#1B3C53] text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 text-sm"
               >
                 {isLoading ? "Signing in..." : "Sign In"}

@@ -43,6 +43,7 @@ const AdminCategories = () => {
     totalLowStock,
   } = useSelector((state) => state.categories);
   const { categories = [] } = useSelector((state) => state.categories || {});
+  console.log(categories);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -317,7 +318,7 @@ const AdminCategories = () => {
                 Total Products
               </p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {totalProducts.toLocaleString()}
+                {totalProducts?.toLocaleString()}
               </p>
             </div>
             <Package className="w-8 h-8 text-green-600" />

@@ -13,14 +13,6 @@ const api = axios.create({
 // Request interceptor - Cookies are automatically included
 api.interceptors.request.use(
   (config) => {
-    console.log("🚀 API REQUEST:", {
-      url: config.url,
-      method: config.method,
-      fullURL: config.baseURL + config.url,
-      withCredentials: config.withCredentials,
-      currentPath: window.location.pathname,
-    });
-
     // No need to manually add Authorization header
     // HttpOnly cookies are automatically included by browser
 
@@ -35,20 +27,9 @@ api.interceptors.request.use(
 // Response interceptor - Handle common errors
 api.interceptors.response.use(
   (response) => {
-    console.log("✅ API SUCCESS:", {
-      url: response.config.url,
-      status: response.status,
-    });
     return response;
   },
   (error) => {
-    console.error("❌ API ERROR:", {
-      url: error.config?.url,
-      status: error.response?.status,
-      message: error.response?.data?.message,
-      currentPath: window.location.pathname,
-    });
-
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
       const requestUrl = error.config.url;

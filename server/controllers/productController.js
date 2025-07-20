@@ -5,38 +5,29 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/apiFeatures");
 
-// @desc    Get all products with filtering, sorting, and pagination
-// @route   GET /api/products
-// @access  Public
-// const getAllProducts = catchAsync(async (req, res, next) => {
 const getAllProducts = catchAsync(async (req, res, next) => {
-  // Build filter object
+  console.log("🔍 Incoming Query:", req.query);
+
+  // ✅ Build filter object
   let filter = { isActive: true };
+
+  // Keyword search
+  if (req.query.search) {
+    const regex = new RegExp(req.query.search, "i");
+    filter.$or = [{ name: regex }, { sku: regex }];
+  }
 
   // Category filter
   if (req.query.category) {
-    // If category is provided, also include products from subcategories
-    const category = await Category.findById(req.query.category);
-    if (category) {
-      const descendants = await category.getAllDescendants();
-      const categoryIds = [category._id, ...descendants.map((d) => d._id)];
-      filter.category = { $in: categoryIds };
-    }
+    filter.category = req.query.category;
   }
 
-  // Price range filter
-  if (req.query.minPrice || req.query.maxPrice) {
-    filter.price = {};
-    if (req.query.minPrice) filter.price.$gte = parseFloat(req.query.minPrice);
-    if (req.query.maxPrice) filter.price.$lte = parseFloat(req.query.maxPrice);
-  }
-
-  // Brand filter
+  // Brand filter (assuming it's stored in specifications.brand)
   if (req.query.brand) {
     filter["specifications.brand"] = new RegExp(req.query.brand, "i");
   }
 
-  // Availability filter
+  // Stock availability
   if (req.query.inStock === "true") {
     filter.stock = { $gt: 0 };
   }
@@ -46,7 +37,7 @@ const getAllProducts = catchAsync(async (req, res, next) => {
     filter.averageRating = { $gte: parseFloat(req.query.minRating) };
   }
 
-  // Featured/sale filters
+  // Featured / Sale filters
   if (req.query.featured === "true") {
     filter.isFeatured = true;
   }
@@ -55,28 +46,40 @@ const getAllProducts = catchAsync(async (req, res, next) => {
     filter.isOnSale = true;
   }
 
-  // Apply filters using APIFeatures
+  // Price range
+  if (req.query.minPrice || req.query.maxPrice) {
+    filter.price = {};
+    if (req.query.minPrice) filter.price.$gte = parseFloat(req.query.minPrice);
+    if (req.query.maxPrice) filter.price.$lte = parseFloat(req.query.maxPrice);
+  }
+
+  // ✅ Apply APIFeatures on filtered query
   const features = new APIFeatures(
     Product.find(filter).populate("category", "name slug"),
     req.query
   )
-    .search() // Text search
-    .sort() // Sorting
-    .limitFields() // Field limiting
-    .paginate(); // Pagination
+    .sort()
+    .limitFields()
+    .paginate();
 
   const products = await features.query;
 
-  // Get total count for pagination
+  console.log("🚀 Products fetched:", products.length);
+
   const totalProducts = await Product.countDocuments(filter);
 
-  // Calculate pagination info
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 12;
+  // Pagination calc
+  const page = req.query.page * 1 || 1;
+  const limit = req.query.limit * 1 || 10;
   const totalPages = Math.ceil(totalProducts / limit);
 
-  // Get available filters for frontend
-  const filters = await getAvailableFilters(filter);
+  // Optional stats
+  const [totalItems, categoryCount, lowStock, outOfStock] = await Promise.all([
+    Product.countDocuments(),
+    Category.countDocuments(),
+    Product.countDocuments({ stock: { $gt: 0, $lte: 10 } }),
+    Product.countDocuments({ stock: 0 }),
+  ]);
 
   res.status(200).json({
     success: true,
@@ -87,12 +90,17 @@ const getAllProducts = catchAsync(async (req, res, next) => {
       totalPages,
       hasNextPage: page < totalPages,
       hasPrevPage: page > 1,
-      limit,
     },
-    filters,
+    stats: {
+      totalProducts: totalItems,
+      categories: categoryCount,
+      lowStockItems: lowStock,
+      outOfStock: outOfStock,
+    },
     products,
   });
 });
+
 // Get minimal product list: only _id and name (optionally filtered by category)
 const getProductNamesByCategory = catchAsync(async (req, res, next) => {
   try {

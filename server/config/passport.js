@@ -3,37 +3,36 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/User");
 
+// Clear any existing strategies
+passport.unuse("google");
+
 passport.use(
+  "google",
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL,
-      scope: ["profile", "email"],
-      state: false, // Disable state parameter if causing issues
+      callbackURL: "/api/user/auth/google/callback",
+      proxy: true,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        console.log("=== Google OAuth Success ===");
-        console.log("Profile received:", {
-          id: profile.id,
-          email: profile.emails?.[0]?.value,
-          name: profile.displayName,
-        });
+        console.log("=== Google OAuth Profile ===");
+        console.log("ID:", profile.id);
+        console.log("Email:", profile.emails?.[0]?.value);
+        console.log("Name:", profile.displayName);
+        console.log("===========================");
 
         const user = await User.findOrCreateOAuthUser(profile, "google");
-        console.log("User found/created:", user._id);
-
         return done(null, user);
       } catch (error) {
-        console.error("Google OAuth Strategy Error:", error);
+        console.error("Google OAuth Error:", error);
         return done(error, null);
       }
     }
   )
 );
 
-// Important: Disable sessions since you're using JWT
 passport.serializeUser((user, done) => {
   done(null, user._id);
 });

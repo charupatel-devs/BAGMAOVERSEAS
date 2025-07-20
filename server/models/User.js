@@ -2,25 +2,16 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
+// ✅ Updated Address Schema
 const addressSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ["home", "office", "other"],
-    default: "home",
-  },
-  name: {
+  nameOrCompany: {
     type: String,
     required: true,
   },
-  phone: {
+  fullAddress: {
     type: String,
-    required: true,
+    default: "",
   },
-  addressLine1: {
-    type: String,
-    required: true,
-  },
-  addressLine2: String,
   city: {
     type: String,
     required: true,
@@ -29,7 +20,7 @@ const addressSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  postalCode: {
+  zipCode: {
     type: String,
     required: true,
   },

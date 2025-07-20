@@ -31,7 +31,7 @@ const orderItemSchema = new mongoose.Schema({
 
 const shippingAddressSchema = new mongoose.Schema(
   {
-    name: {
+    nameOrCompany: {
       type: String,
       required: true,
     },
@@ -39,11 +39,10 @@ const shippingAddressSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    addressLine1: {
+    fullAddress: {
       type: String,
       required: true,
     },
-    addressLine2: String,
     city: {
       type: String,
       required: true,
@@ -52,7 +51,7 @@ const shippingAddressSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    postalCode: {
+    zipCode: {
       type: String,
       required: true,
     },

@@ -1,35 +1,22 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-const ProductSidebar = () => {
-  const [expandedCategories, setExpandedCategories] = useState(["door-mats"]);
+import { fetchCategories } from "../../../services_hooks/customer/categoryService";
 
-  const productCategories = [
-    { id: "door-mats", name: "Door Mats", productCount: 42 },
-    { id: "hotel-bath-rugs", name: "Hotel Bath Rugs", productCount: 32 },
-    { id: "tufted-bath-mats", name: "Tufted Bath Mats", productCount: 34 },
-    {
-      id: "door-mats-anti-slip",
-      name: "Door Mats - ANTI SLIP",
-      productCount: 28,
-    },
-    {
-      id: "door-mats-handloom",
-      name: "Door Mats - Handloom",
-      productCount: 25,
-    },
-    { id: "runners-anti-slip", name: "Runners - ANTI SLIP", productCount: 15 },
-    {
-      id: "microfiber-cleaning-cloth",
-      name: "Microfiber Cleaning Cloth",
-      productCount: 12,
-    },
-    { id: "carpets", name: "Carpets", productCount: 12 },
-    { id: "bath-mats", name: "Bath Mats", productCount: 38 },
-    { id: "prayer-mats", name: "Prayer Mats", productCount: 24 },
-    { id: "kids-mats", name: "Kids Mats", productCount: 18 },
-    { id: "braided-mats", name: "Braided Mats", productCount: 16 },
-  ];
+const ProductSidebar = () => {
+  const dispatch = useDispatch();
+
+  // Get categories from Redux store
+  const { categories, loading } = useSelector((state) => state.userCategories);
+
+  // Local state to manage expand/collapse
+  const [expandedCategories, setExpandedCategories] = useState([]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories(dispatch);
+  }, [dispatch]);
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) =>
@@ -46,39 +33,54 @@ const ProductSidebar = () => {
       </div>
 
       <div className="py-2">
-        {productCategories.map((category) => (
-          <div key={category.id} className="border-b border-gray-100">
-            <button
-              onClick={() => toggleCategory(category.id)}
-              className="w-full flex flex-col items-start px-4 py-3 text-left hover:bg-[#F9F3EF] transition-colors"
-            >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-medium text-[#1B3C53] text-sm">
-                  {category.name}
-                </span>
-                {expandedCategories.includes(category.id) ? (
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-500" />
-                )}
-              </div>
-              <span className="text-xs text-gray-500">
-                {category.productCount} products available
-              </span>
-            </button>
-
-            {expandedCategories.includes(category.id) && (
-              <div className="bg-[#F9F3EF] px-6 py-2">
-                <Link
-                  to={`/products?category=${category.id}`}
-                  className="text-xs text-gray-600 hover:text-[#456882] transition-colors"
-                >
-                  View all {category.name.toLowerCase()}
-                </Link>
-              </div>
-            )}
+        {loading && (
+          <div className="text-center py-4 text-gray-500 text-sm">
+            Loading categories...
           </div>
-        ))}
+        )}
+
+        {!loading && categories.length === 0 && (
+          <div className="text-center py-4 text-gray-400 text-sm">
+            No categories found
+          </div>
+        )}
+
+        {!loading &&
+          categories.map((category) => (
+            <div key={category._id} className="border-b border-gray-100">
+              <button
+                onClick={() => toggleCategory(category._id)}
+                className="w-full flex flex-col items-start px-4 py-3 text-left hover:bg-[#F9F3EF] transition-colors"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-medium text-[#1B3C53] text-sm">
+                    {category.name}
+                  </span>
+                  {expandedCategories.includes(category._id) ? (
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                  )}
+                </div>
+                {category.productCount !== undefined && (
+                  <span className="text-xs text-gray-500">
+                    {category.productCount} products available
+                  </span>
+                )}
+              </button>
+
+              {expandedCategories.includes(category._id) && (
+                <div className="bg-[#F9F3EF] px-6 py-2">
+                  <Link
+                    to={`/products?category=${category.slug || category._id}`}
+                    className="text-xs text-gray-600 hover:text-[#456882] transition-colors"
+                  >
+                    View all {category.name.toLowerCase()}
+                  </Link>
+                </div>
+              )}
+            </div>
+          ))}
 
         <div className="p-4">
           <Link
@@ -92,4 +94,5 @@ const ProductSidebar = () => {
     </div>
   );
 };
+
 export default ProductSidebar;

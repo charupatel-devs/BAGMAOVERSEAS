@@ -5,16 +5,14 @@ const compression = require("compression");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
-const passport = require("passport");
 const { applySecurity } = require("./middlewares/security");
 
 // Load environment variables first
 dotenv.config({
   path: "./config/config.env",
 });
-
 // Initialize Passport configuration
-require("./config/passport");
+const passport = require("./config/passport"); // Adjust path
 
 const app = express();
 
@@ -28,13 +26,12 @@ app.use(cookieParser());
 // Session configuration (required for Passport)
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "your-session-secret-key",
+    secret: process.env.SESSION_SECRET || "fallback-secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: false, // Important for development
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -154,5 +151,15 @@ app.all("*", (req, res) => {
     ],
   });
 });
-
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-fallback-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  })
+);
 module.exports = app;

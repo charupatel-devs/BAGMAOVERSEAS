@@ -627,7 +627,7 @@ const AllProducts = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                            ${product.price}
+                            Rs.{product.price}
                           </td>
                           <td className="px-6 py-4">
                             <span
@@ -757,7 +757,7 @@ const AllProducts = () => {
                           <div className="mb-3">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-lg font-bold text-gray-900">
-                                ${product.price}
+                                Rs.{product.price}
                               </span>
                               <span
                                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(

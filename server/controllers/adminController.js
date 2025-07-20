@@ -840,9 +840,6 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
 // @desc    Create new product
 // @route   POST /api/admin/products
 // @access  Private/Admin
-// @desc    Create new product
-// @route   POST /api/admin/products
-// @access  Private/Admin
 exports.createProduct = [
   // Handle multiple image uploads - this parses FormData
   upload.array("images", 10), // Allow up to 10 images
@@ -905,6 +902,7 @@ exports.createProduct = [
       }
 
       // Prepare final data
+      // In your createProduct function, add this to finalData:
       const finalData = {
         name: productData.name,
         sku: productData.sku,
@@ -912,6 +910,7 @@ exports.createProduct = [
         category: productData.category,
         price: parseFloat(productData.price) || 0,
         originalPrice: parseFloat(productData.originalPrice) || 0,
+        gst: parseFloat(productData.gst) || 18, // Add this line
         stock: parseInt(productData.stock) || 0,
         minOrderQuantity: parseInt(productData.minOrderQuantity) || 1,
         maxOrderQuantity: productData.maxOrderQuantity
@@ -924,6 +923,14 @@ exports.createProduct = [
         tags: productData.tags || [],
         createdBy: req.user._id,
       };
+
+      // Add GST validation
+      if (!finalData.gst && finalData.gst !== 0) {
+        return res.status(400).json({
+          success: false,
+          message: "GST percentage is required",
+        });
+      }
 
       console.log("🚀 Final product data:", finalData);
       console.log("📋 Specifications:", specifications);

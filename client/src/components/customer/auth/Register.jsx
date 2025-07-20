@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
-  getGoogleAuthUrl,
   handleGoogleCallback,
   registerUser,
 } from "../../../services_hooks/customer/userAuthApi";
@@ -97,16 +96,24 @@ const Register = () => {
     }
   };
 
-  const handleGoogleRegister = async () => {
-    try {
-      // Call the Google OAuth service - it handles dispatch internally
-      await getGoogleAuthUrl(dispatch);
+  // Update your frontend service
+  const initiateGoogleAuth = async (dispatch) => {
+    // dispatch(UserLoginStart());
 
-      // User will be redirected to Google, no need for further action
+    try {
+      console.log("Redirecting to Google OAuth via Passport...");
+
+      // Direct redirect - no API call needed
+      window.location.href = `http://localhost:5001/api/user/auth/google`;
     } catch (error) {
-      // Error is handled in the service (toast + dispatch)
-      console.error("Google OAuth initiation failed:", error);
+      // dispatch(UserLoginFailure("Failed to initiate Google authentication"));
+      throw error;
     }
+  };
+
+  // Update your register component
+  const handleGoogleRegister = async () => {
+    initiateGoogleAuth();
   };
 
   const handleGoBack = () => {

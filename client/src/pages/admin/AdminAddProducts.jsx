@@ -46,6 +46,7 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
     category: "",
     price: "",
     originalPrice: "",
+    gst: "", // Add this line
     stock: "",
     minOrderQuantity: "",
     maxOrderQuantity: "",
@@ -238,7 +239,6 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
     const inputProps = {
       className:
         "w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-      required: isRequired,
     };
 
     switch (type) {
@@ -247,7 +247,6 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
           <div key={name} className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               {label} {unit && `(${unit})`}{" "}
-              {isRequired && <span className="text-red-500">*</span>}
             </label>
             <input
               type="text"
@@ -265,7 +264,6 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
           <div key={name} className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               {label} {unit && `(${unit})`}{" "}
-              {isRequired && <span className="text-red-500">*</span>}
             </label>
             <input
               type="number"
@@ -289,7 +287,7 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
         return (
           <div key={name} className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              {label} {isRequired && <span className="text-red-500">*</span>}
+              {label}
             </label>
             <select
               value={value}
@@ -310,7 +308,7 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
         return (
           <div key={name} className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              {label} {isRequired && <span className="text-red-500">*</span>}
+              {label}
             </label>
             <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3">
               {options?.map((option, index) => (
@@ -361,19 +359,23 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
         );
 
       case "range":
+        const rangeValue = formData.specifications[name] || {
+          min: "",
+          max: "",
+        };
+
         return (
           <div key={name} className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              {label} {unit && `(${unit})`}{" "}
-              {isRequired && <span className="text-red-500">*</span>}
+              {label} {unit && `(${unit})`}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="number"
-                value={value?.min || ""}
+                value={rangeValue.min}
                 onChange={(e) =>
                   handleSpecificationChange(name, {
-                    ...(value || {}),
+                    ...rangeValue,
                     min: e.target.value ? parseFloat(e.target.value) : "",
                   })
                 }
@@ -384,10 +386,10 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
               />
               <input
                 type="number"
-                value={value?.max || ""}
+                value={rangeValue.max}
                 onChange={(e) =>
                   handleSpecificationChange(name, {
-                    ...(value || {}),
+                    ...rangeValue,
                     max: e.target.value ? parseFloat(e.target.value) : "",
                   })
                 }
@@ -510,14 +512,16 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
 
     try {
       // Validate required fields
+      // Validate required fields
       if (
         !formData.name ||
         !formData.sku ||
         !formData.description ||
         !formData.category ||
-        !formData.price
+        !formData.price ||
+        !formData.gst // Add this line
       ) {
-        alert("Please fill in all required fields");
+        alert("Please fill in all required fields including GST");
         return;
       }
 
@@ -535,6 +539,7 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
         category: "",
         price: "",
         originalPrice: "",
+        gst: "", // Add this line
         stock: "",
         minOrderQuantity: "",
         maxOrderQuantity: "",
@@ -559,7 +564,7 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
 
   const downloadCsvTemplate = () => {
     let csvHeaders =
-      "name,sku,description,category,price,originalPrice,stock,minOrderQuantity,tags";
+      "name,sku,description,category,price,originalPrice,gst,stock,minOrderQuantity,tags";
 
     if (categoryAttributes.length > 0) {
       const specHeaders = categoryAttributes

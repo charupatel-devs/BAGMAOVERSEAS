@@ -32,6 +32,7 @@ const router = express.Router();
 // ===========================================
 
 // Product listing and search
+router.get("/", getAllProducts);
 
 router.get("/names", optionalAuth, getProductNamesByCategory);
 router.get("/search", optionalAuth, searchProducts);

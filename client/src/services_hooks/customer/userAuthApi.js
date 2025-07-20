@@ -6,6 +6,9 @@ import {
   UserLoginSuccess,
   UserLogoutStart,
   UserLogoutSuccess,
+  UserProfileFailure,
+  UserProfileStart,
+  UserProfileSuccess,
   UserRegisterFailure,
   UserRegisterStart,
   UserRegisterSuccess,
@@ -89,9 +92,13 @@ export const registerUser = async (dispatch, userData) => {
 
     // Make API call
     const { data } = await postWithRetry("/user/register", payload);
+    const userData = {
+      user: data.user,
+      token: token,
+    };
 
     // Success handling
-    dispatch(UserRegisterSuccess(data));
+    dispatch(UserRegisterSuccess(userData));
     toast.success("Account created successfully!", {
       id: "user-register",
       ...SuccessToastOptions,
@@ -135,9 +142,13 @@ export const loginUser = async (dispatch, credentials) => {
 
     // Make API call
     const { data } = await api.post("/user/login", payload);
+    const userData = {
+      user: data.user,
+      token: token,
+    };
 
     // Success handling
-    dispatch(UserLoginSuccess(data));
+    dispatch(UserLoginSuccess(userData));
     toast.success(`Welcome back, ${data.user?.name || "User"}!`, {
       id: "user-login",
       ...SuccessToastOptions,
@@ -152,42 +163,6 @@ export const loginUser = async (dispatch, credentials) => {
     dispatch(UserLoginFailure(errorMsg));
     toast.error(errorMsg, {
       id: "user-login",
-      ...ErrorToastOptions,
-    });
-
-    throw error;
-  }
-};
-
-// authServices.js - Add Google OAuth service
-
-// Google OAuth Service - Get Auth URL from backend
-export const getGoogleAuthUrl = async (dispatch) => {
-  dispatch(UserLoginStart()); // Start loading state
-
-  try {
-    console.log("Getting Google OAuth URL from backend...");
-
-    const { data } = await api.get("/user/auth/google/url");
-
-    if (data.success && data.authUrl) {
-      console.log("Google OAuth URL received:", data.authUrl);
-
-      // Redirect to Google OAuth URL
-      window.location.href = data.authUrl;
-
-      // Note: We don't dispatch success here because user will be redirected
-      // Success/failure will be handled in the callback
-    } else {
-      throw new Error("Failed to get Google OAuth URL");
-    }
-  } catch (error) {
-    const errorMsg = parseError(error);
-    console.error("Failed to get Google OAuth URL:", errorMsg);
-
-    dispatch(UserLoginFailure(errorMsg));
-    toast.error(errorMsg, {
-      id: "google-oauth-url",
       ...ErrorToastOptions,
     });
 
@@ -277,42 +252,6 @@ export const handleGoogleCallback = async (dispatch) => {
 
     // Clean up URL
     window.history.replaceState({}, document.title, window.location.pathname);
-    throw error;
-  }
-};
-
-// Alternative: Direct Google Login Service (if you want to handle token in frontend)
-export const googleLogin = async (dispatch, googleToken) => {
-  dispatch(UserLoginStart());
-
-  try {
-    console.log("Processing Google login with token...");
-
-    const payload = {
-      token: googleToken,
-      provider: "google",
-    };
-
-    const { data } = await api.post("/user/auth/google/login", payload);
-
-    dispatch(UserLoginSuccess(data));
-    toast.success(`Welcome, ${data.user?.name || "User"}!`, {
-      id: "google-login",
-      ...SuccessToastOptions,
-    });
-
-    console.log("Google login successful:", data);
-    return data;
-  } catch (error) {
-    const errorMsg = parseError(error);
-    console.error("Google login failed:", errorMsg);
-
-    dispatch(UserLoginFailure(errorMsg));
-    toast.error(errorMsg, {
-      id: "google-login",
-      ...ErrorToastOptions,
-    });
-
     throw error;
   }
 };
@@ -441,17 +380,53 @@ export const continueAsGuest = (dispatch) => {
 };
 
 // Get User Profile Service
-export const getUserProfile = async () => {
+export const getUserProfile = async (dispatch) => {
+  const token = localStorage.getItem("authToken");
   try {
-    const { data } = await api.get("/user/profile");
-    console.log("Profile fetched:", data);
-    return data;
+    dispatch(UserProfileStart());
+
+    const { data } = await api.get("/user/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("User profile fetched:", data);
+    dispatch(UserProfileSuccess({ user: data }));
   } catch (error) {
-    console.error("Failed to fetch profile:", parseError(error));
-    throw error;
+    const errorMsg = parseError(error);
+    dispatch(UserProfileFailure(errorMsg));
+    toast.error(errorMsg, {
+      ...ErrorToastOptions,
+    });
   }
 };
+// Edit User Profile Service (corrected version)
+export const editUserProfile = async (dispatch, userData) => {
+  const token = localStorage.getItem("authToken");
+  try {
+    dispatch(UserProfileStart());
+    const { data } = await api.put("/user/profile", userData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    dispatch(UserProfileSuccess({ user: data }));
 
+    toast.success("Profile updated successfully!", {
+      ...SuccessToastOptions,
+    });
+
+    return data;
+  } catch (error) {
+    const errorMsg = parseError(error);
+    dispatch(UserProfileFailure(errorMsg));
+    toast.error(errorMsg, {
+      ...ErrorToastOptions,
+    });
+    throw error; // Re-throw so the component can handle it
+  }
+};
 // Validate User Token Service (if you implement this endpoint)
 export const validateUserToken = async () => {
   try {
@@ -479,8 +454,9 @@ export const getUserAddresses = async () => {
 };
 
 // Add new address
-export const addUserAddress = async (addressData) => {
+export const addUserAddress = async (dispatch, addressData) => {
   try {
+    console.log("Adding new address:", addressData);
     const { data } = await api.post("/user/addresses", addressData);
     toast.success("Address added successfully!", {
       id: "add-address",
@@ -577,11 +553,8 @@ export default {
   loginUser,
   logoutUser,
   clearAuthError,
-
-  // Google OAuth services
-  getGoogleAuthUrl,
+  // OAuth services,
   handleGoogleCallback,
-  googleLogin,
   // Password management
   setPassword,
   getAuthMethods,
