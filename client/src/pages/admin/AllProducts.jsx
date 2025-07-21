@@ -468,7 +468,6 @@ const AllProducts = () => {
                     className="px-3 py-1 border border-gray-200 rounded text-sm"
                   >
                     <option value="name">Name</option>
-                    <option value="sku">SKU</option>
                     <option value="price">Price</option>
                     <option value="stock">Stock</option>
                     <option value="createdAt">Date Added</option>
@@ -530,15 +529,7 @@ const AllProducts = () => {
                           <ArrowUpDown className="w-3 h-3" />
                         </button>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <button
-                          onClick={() => handleSort("sku")}
-                          className="flex items-center space-x-1 hover:text-gray-700"
-                        >
-                          <span>SKU</span>
-                          <ArrowUpDown className="w-3 h-3" />
-                        </button>
-                      </th>
+
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Category
                       </th>
@@ -618,9 +609,7 @@ const AllProducts = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-900">
-                            {product.sku}
-                          </td>
+
                           <td className="px-6 py-4">
                             <div className="text-sm text-gray-900">
                               {product.category?.name}
@@ -741,9 +730,6 @@ const AllProducts = () => {
                             <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
                               {product.name}
                             </h3>
-                            <p className="text-xs text-gray-500">
-                              {product.sku}
-                            </p>
                           </div>
                           {/* <div className="mb-2">
                           <div className="flex items-center space-x-1 mb-1">

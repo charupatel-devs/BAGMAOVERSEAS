@@ -48,20 +48,6 @@ const AddSingleProduct = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              SKU *
-            </label>
-            <input
-              type="text"
-              name="sku"
-              value={formData.sku}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Product SKU"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
               Category *
             </label>
             {isFetching ? (
@@ -479,7 +465,6 @@ const AddSingleProduct = ({
           onClick={() => {
             setFormData({
               name: "",
-              sku: "",
               description: "",
               category: "",
               price: "",

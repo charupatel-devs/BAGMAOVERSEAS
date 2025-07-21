@@ -65,10 +65,8 @@ const AdminProductsManagement = () => {
   }, [searchTerm]);
 
   // Filter products based on search term
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter((product) =>
+    product.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   console.log(stats);
   const statsData = [
@@ -297,9 +295,7 @@ const AdminProductsManagement = () => {
                   <th className="text-left py-3 px-4 font-medium text-gray-700">
                     Product
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">
-                    SKU
-                  </th>
+
                   <th className="text-left py-3 px-4 font-medium text-gray-700">
                     Stock
                   </th>
@@ -330,7 +326,6 @@ const AdminProductsManagement = () => {
                           {product.name}
                         </NavLink>
                       </td>
-                      <td className="py-3 px-4 text-gray-600">{product.sku}</td>
                       <td className="py-3 px-4 text-gray-900">
                         {product.stock}
                       </td>

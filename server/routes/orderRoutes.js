@@ -1,6 +1,3 @@
-// routes/orderRoutes.js
-// Updated order routes with complete authentication
-
 const express = require("express");
 const {
   createOrder,
@@ -38,43 +35,26 @@ const router = express.Router();
 // ===========================================
 // ALL ROUTES REQUIRE AUTHENTICATION
 // ===========================================
-
 router.use(isAuthenticated);
 
 // ===========================================
 // SHOPPING CART MANAGEMENT
 // ===========================================
-
-// Get cart items
 router.get("/cart", getCartItems);
-
-// Add item to cart
 router.post("/cart/add", addToCart);
-
-// Update cart item quantity
 router.put("/cart/update/:itemId", updateCartItem);
-
-// Remove item from cart
 router.delete("/cart/remove/:itemId", removeFromCart);
-
-// Clear entire cart
 router.delete("/cart/clear", clearCart);
 
 // ===========================================
 // ORDER CALCULATION & DISCOUNTS
 // ===========================================
-
-// Calculate shipping costs
 router.post("/calculate-shipping", calculateShipping);
-
-// Apply discount/coupon
 router.post("/apply-discount", applyDiscount);
 
 // ===========================================
 // ORDER CREATION & MANAGEMENT
 // ===========================================
-
-// Create new order (requires verified email and complete profile)
 router.post(
   "/create",
   // requireVerifiedEmail,
@@ -83,14 +63,13 @@ router.post(
   createOrder
 );
 
-// Get user's orders
-router.get("/my-orders", getUserOrders);
 router.get("/management", isAdmin, getOrderManagementData);
+router.get("/", getUserOrders);
 
-// Get specific order details (only if user owns the order)
-router.get("/:id", canViewOrder, getOrderById);
+// Must be after more specific routes
+router.get("/:id/tracking", canViewOrder, getOrderTracking);
+router.get("/:id/invoice", canViewOrder, downloadInvoice);
 
-// Cancel order (only if user owns the order and order is modifiable)
 router.put(
   "/:id/cancel",
   canModifyOrder,
@@ -98,37 +77,24 @@ router.put(
   cancelOrder
 );
 
-// Get order tracking information
-router.get("/:id/tracking", canViewOrder, getOrderTracking);
-
-// Download order invoice (only for paid orders)
-router.get("/:id/invoice", canViewOrder, downloadInvoice);
-
-// ===========================================
-// PAYMENT PROCESSING
-// ===========================================
-
-// Process payment for order
+// Payments
 router.post(
   "/:id/payment",
   canModifyOrder,
   logActivity("process_payment"),
   processPayment
 );
-
-// Verify payment status
 router.post("/:id/verify-payment", canViewOrder, verifyPayment);
 
-// ===========================================
-// ADMIN-ONLY ORDER STATUS ROUTES
-// ===========================================
-
-// Get pending orders
+// Admin: Get orders by status
 router.get(
   "/orders/:status",
   isAdmin,
   logActivity("get_orders_by_status"),
   getOrdersByStatus
 );
+
+// MUST BE LAST - catches dynamic orderId
+router.get("/:id", canViewOrder, getOrderById);
 
 module.exports = router;

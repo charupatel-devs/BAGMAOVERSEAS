@@ -16,6 +16,7 @@ import {
   updateCartStart,
   updateCartSuccess,
 } from "../../store/customer/cartSlice";
+
 import api from "../api";
 
 // Toast Options
@@ -50,7 +51,7 @@ export const getCartItems = async (dispatch) => {
   try {
     dispatch(fetchCartStart());
 
-    const response = await api.get("/cart");
+    const response = await api.get("orders/cart");
     const cartData = response.data.cart || response.data;
 
     dispatch(fetchCartSuccess(cartData));
@@ -81,7 +82,7 @@ export const addToCart = async (dispatch, productData) => {
       specifications,
     };
 
-    const response = await api.post("/cart/add", payload);
+    const response = await api.post("orders/cart/add", payload);
     const cartData = response.data.cart || response.data;
 
     dispatch(addToCartSuccess(cartData));
@@ -111,7 +112,7 @@ export const updateCartItem = async (dispatch, itemId, quantity) => {
 
     const payload = { quantity };
 
-    const response = await api.put(`/cart/update/${itemId}`, payload);
+    const response = await api.put(`orders/cart/update/${itemId}`, payload);
     const cartData = response.data.cart || response.data;
 
     dispatch(updateCartSuccess(cartData));
@@ -135,7 +136,7 @@ export const removeFromCart = async (dispatch, itemId) => {
       throw new Error("Item ID is required");
     }
 
-    const response = await api.delete(`/cart/remove/${itemId}`);
+    const response = await api.delete(`orders/cart/remove/${itemId}`);
     const cartData = response.data.cart || response.data;
 
     dispatch(removeFromCartSuccess(cartData));
@@ -155,7 +156,7 @@ export const clearCart = async (dispatch) => {
   try {
     dispatch(clearCartStart());
 
-    const response = await api.delete("/cart/clear");
+    const response = await api.delete("orders/cart/clear");
     const result = response.data;
 
     dispatch(clearCartSuccess());

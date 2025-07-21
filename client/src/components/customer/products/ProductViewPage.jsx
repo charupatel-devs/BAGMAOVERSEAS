@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import { addToCart } from "../../../services_hooks/customer/cartService";
 import { getProductById } from "../../../services_hooks/customer/productService";
 
 const ProductViewPage = () => {
@@ -24,6 +25,7 @@ const ProductViewPage = () => {
     isFetching = false,
     error = null,
   } = useSelector((state) => state.userProducts || {});
+  const { isAdding = false } = useSelector((state) => state.cart || {});
   const { productId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -74,6 +76,26 @@ const ProductViewPage = () => {
     setCurrentImageIndex(
       (prev) => (prev - 1 + productImages.length) % productImages.length
     );
+  };
+
+  // ✅ Simplified Add to Cart - NO MODAL
+  const handleAddToCart = async () => {
+    try {
+      const cartData = {
+        productId: currentProduct._id || currentProduct.id,
+        quantity: quantity,
+      };
+      console.log("Adding to cart with data:", cartData);
+      const result = await addToCart(dispatch, cartData);
+
+      if (result) {
+        console.log("✅ Product added to cart successfully:", result);
+        // Optional: Show success toast or navigate to cart
+        // navigate("/cart");
+      }
+    } catch (error) {
+      console.error("❌ Failed to add to cart:", error);
+    }
   };
 
   // Transform specifications object to display format and filter out N/A values
@@ -364,7 +386,7 @@ const ProductViewPage = () => {
               </div>
               <p className="text-gray-600 mb-2 text-sm">
                 <span className="font-medium">
-                  {currentProduct.gst || 18}% GST
+                  {currentProduct.gstRate || 18}% GST
                 </span>{" "}
                 will be additional
                 <p>
@@ -432,11 +454,11 @@ const ProductViewPage = () => {
                     {(quantity * currentProduct.price).toLocaleString()}
                   </div>
                   <div className="font-medium text-sm text-gray-500">
-                    GST ({currentProduct.gst || 18}%): ₹
+                    GST ({currentProduct.gstRate || 18}%): ₹
                     {Math.round(
                       (quantity *
                         currentProduct.price *
-                        (currentProduct.gst || 18)) /
+                        (currentProduct.gstRate || 18)) /
                         100
                     ).toLocaleString()}
                   </div>
@@ -445,7 +467,7 @@ const ProductViewPage = () => {
                     {Math.round(
                       quantity *
                         currentProduct.price *
-                        (1 + (currentProduct.gst || 18) / 100)
+                        (1 + (currentProduct.gstRate || 18) / 100)
                     ).toLocaleString()}
                   </div>
                   <div className="text-xs font-bold">Ex-Mill Price</div>
@@ -456,11 +478,24 @@ const ProductViewPage = () => {
               </p>
             </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-3 ">
-              <button className=" w-1/2 bg-gradient-to-r from-[#456882] to-[#1B3C53] text-white py-3 px-6 rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                <ShoppingCart className="w-5 h-5" />
-                Add to Cart
+            {/* ✅ Simplified Action Button - NO MODAL */}
+            <div className="space-y-3">
+              <button
+                onClick={handleAddToCart}
+                disabled={!currentProduct || quantity < minQuantity || isAdding}
+                className="w-1/2 bg-gradient-to-r from-[#456882] to-[#1B3C53] text-white py-3 px-6 rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAdding ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-5 h-5" />
+                    Add to Cart
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -630,27 +665,10 @@ const ProductViewPage = () => {
                       {currentProduct.description ||
                         "High quality product designed for your needs."}
                     </p>
-                    {/* <p className="text-gray-700 leading-relaxed mb-4">
-                      This premium quality{" "}
-                      {currentProduct.category?.name?.toLowerCase() ||
-                        "product"}{" "}
-                      is crafted with precision using high-grade{" "}
-                      {specifications.Material} material. The{" "}
-                      {specifications.Pattern?.toLowerCase()} design adds
-                      elegance to any space while providing excellent
-                      functionality.
-                    </p>
-                    <p className="text-gray-700 leading-relaxed">
-                      Perfect for{" "}
-                      {specifications["Usage/Application"]?.toLowerCase()} use,
-                      this product offers durability, comfort, and style.
-                      Available in {specifications.Color?.toLowerCase()} and
-                      provides excellent value for money with our quality
-                      guarantee.
-                    </p> */}
                   </div>
                 </div>
               )}
+
               {activeTab === "reviews" && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -767,7 +785,7 @@ const ProductViewPage = () => {
                 <Phone className="w-8 h-8 text-white" />
               </div>
               <h4 className="font-bold text-[#1B3C53] mb-2">Call Us</h4>
-              <p className="text-[#456882] font-medium">+91-804-580-3379</p>
+              <p className="text-[#456882] font-medium">+91-8178211858</p>
             </div>
 
             <div className="text-center p-6 bg-[#F9F3EF] rounded-xl">
@@ -776,7 +794,7 @@ const ProductViewPage = () => {
               </div>
               <h4 className="font-bold text-[#1B3C53] mb-2">Email Us</h4>
               <p className="text-[#456882] font-medium">
-                info@bagmaoverseas.com
+                bagmaoverseas@gmail.com
               </p>
             </div>
 

@@ -35,10 +35,7 @@ const shippingAddressSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    phone: {
-      type: String,
-      required: true,
-    },
+
     fullAddress: {
       type: String,
       required: true,
@@ -68,14 +65,8 @@ const paymentInfoSchema = new mongoose.Schema(
   {
     method: {
       type: String,
-      enum: [
-        "credit_card",
-        "debit_card",
-        "upi",
-        "net_banking",
-        "wallet",
-        "cod",
-      ],
+      enum: ["manual"], // ✅ Only manual allowed now
+      default: "manual",
       required: true,
     },
     status: {

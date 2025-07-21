@@ -1,6 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
 
+import userCartReducer from "./customer/cartSlice";
 import categoriesReducer from "./customer/categorySlice";
+import userOrdersReducer from "./customer/orderSlice";
 import userProductsReducer from "./customer/productSlice";
 import userAuthReducer from "./customer/userAuthSlice";
 // Admin slices
@@ -18,6 +20,8 @@ export default configureStore({
     userAuth: userAuthReducer,
     userCategories: categoriesReducer,
     userProducts: userProductsReducer,
+    userCart: userCartReducer,
+    userOrders: userOrdersReducer,
     // Admin-related state
     adminAuth: adminAuthReducer,
     categories: adminCategoriesReducer,

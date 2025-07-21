@@ -924,14 +924,6 @@ exports.createProduct = [
         createdBy: req.user._id,
       };
 
-      // Add GST validation
-      if (!finalData.gst && finalData.gst !== 0) {
-        return res.status(400).json({
-          success: false,
-          message: "GST percentage is required",
-        });
-      }
-
       console.log("🚀 Final product data:", finalData);
       console.log("📋 Specifications:", specifications);
 

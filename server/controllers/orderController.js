@@ -151,14 +151,21 @@ exports.addToCart = catchAsync(async (req, res, next) => {
       new AppError(`Minimum order quantity is ${product.minOrderQuantity}`, 400)
     );
   }
-  if (quantity > product.maxOrderQuantity) {
+  if (product.maxOrderQuantity && quantity > product.maxOrderQuantity) {
     return next(
       new AppError(`Maximum order quantity is ${product.maxOrderQuantity}`, 400)
     );
   }
 
-  const userId = req.user._id.toString();
-  const cart = await getUserCart(userId);
+  // ✅ Find or create cart using 'user' field (matching your schema)
+  let cart = await Cart.findOne({ user: req.user._id });
+
+  if (!cart) {
+    cart = new Cart({
+      user: req.user._id,
+      items: [],
+    });
+  }
 
   // Find existing item index
   const existingItemIndex = cart.items.findIndex(
@@ -178,7 +185,7 @@ exports.addToCart = catchAsync(async (req, res, next) => {
         )
       );
     }
-    if (newQuantity > product.maxOrderQuantity) {
+    if (product.maxOrderQuantity && newQuantity > product.maxOrderQuantity) {
       return next(
         new AppError(
           `Cannot add ${quantity} more items. Total would exceed maximum order quantity of ${product.maxOrderQuantity}`,
@@ -187,34 +194,27 @@ exports.addToCart = catchAsync(async (req, res, next) => {
       );
     }
 
-    // Update existing item
+    // ✅ Only update quantity - NO PRICE STORAGE
     cart.items[existingItemIndex].quantity = newQuantity;
-    cart.items[existingItemIndex].price =
-      product.getPriceForQuantity(newQuantity);
   } else {
-    // Add new item
+    // ✅ Add new item - ONLY essential data, NO PRICE
     cart.items.push({
       productId,
-      name: product.name,
-      image: product.primaryImage || "https://via.placeholder.com/300",
-      sku: product.sku,
       quantity,
-      price: product.getPriceForQuantity(quantity),
       addedAt: new Date(),
     });
   }
 
-  // Save to database (totals calculated automatically via pre-save hook)
+  // Save to database
   await cart.save();
+
+  // ✅ Get cart with calculated totals using the schema method
+  const cartWithTotals = await cart.getCartWithTotals();
 
   res.status(200).json({
     success: true,
     message: "Item added to cart successfully",
-    cart: {
-      itemCount: cart.items.length,
-      totalItems: cart.items.reduce((total, item) => total + item.quantity, 0),
-      totalAmount: cart.totalAmount,
-    },
+    cart: cartWithTotals,
   });
 });
 
@@ -229,8 +229,11 @@ exports.updateCartItem = catchAsync(async (req, res, next) => {
     return next(new AppError("Valid quantity is required", 400));
   }
 
-  const userId = req.user._id.toString();
-  const cart = await getUserCart(userId);
+  // ✅ Use 'user' field to match schema
+  const cart = await Cart.findOne({ user: req.user._id });
+  if (!cart) {
+    return next(new AppError("Cart not found", 404));
+  }
 
   // Find item by productId (itemId in params is productId)
   const itemIndex = cart.items.findIndex(
@@ -243,6 +246,8 @@ exports.updateCartItem = catchAsync(async (req, res, next) => {
 
   const product = await Product.findById(itemId);
   if (!product) return next(new AppError("Product not found", 404));
+  if (!product.isActive)
+    return next(new AppError("Product is not available", 400));
 
   if (quantity === 0) {
     // Remove item if quantity is 0
@@ -262,7 +267,7 @@ exports.updateCartItem = catchAsync(async (req, res, next) => {
         )
       );
     }
-    if (quantity > product.maxOrderQuantity) {
+    if (product.maxOrderQuantity && quantity > product.maxOrderQuantity) {
       return next(
         new AppError(
           `Maximum order quantity is ${product.maxOrderQuantity}`,
@@ -271,18 +276,20 @@ exports.updateCartItem = catchAsync(async (req, res, next) => {
       );
     }
 
-    // Update item
+    // ✅ Only update quantity - NO PRICE STORAGE
     cart.items[itemIndex].quantity = quantity;
-    cart.items[itemIndex].price = product.getPriceForQuantity(quantity);
   }
 
   await cart.save();
+
+  // ✅ Get cart with calculated totals
+  const cartWithTotals = await cart.getCartWithTotals();
 
   res.status(200).json({
     success: true,
     message:
       quantity === 0 ? "Item removed from cart" : "Cart updated successfully",
-    cart,
+    cart: cartWithTotals,
   });
 });
 
@@ -291,8 +298,12 @@ exports.updateCartItem = catchAsync(async (req, res, next) => {
 // @access  Private
 exports.removeFromCart = catchAsync(async (req, res, next) => {
   const { itemId } = req.params;
-  const userId = req.user._id.toString();
-  const cart = await getUserCart(userId);
+
+  // ✅ Use 'user' field to match schema
+  const cart = await Cart.findOne({ user: req.user._id });
+  if (!cart) {
+    return next(new AppError("Cart not found", 404));
+  }
 
   const itemIndex = cart.items.findIndex(
     (item) => item.productId.toString() === itemId
@@ -302,14 +313,21 @@ exports.removeFromCart = catchAsync(async (req, res, next) => {
     return next(new AppError("Item not found in cart", 404));
   }
 
-  const removedItem = cart.items.splice(itemIndex, 1)[0];
+  // ✅ Get product name before removing (for response message)
+  const product = await Product.findById(itemId);
+  const removedItemName = product ? product.name : "Item";
+
+  cart.items.splice(itemIndex, 1);
   await cart.save();
+
+  // ✅ Get updated cart with totals
+  const cartWithTotals = await cart.getCartWithTotals();
 
   res.status(200).json({
     success: true,
     message: "Item removed from cart successfully",
-    removedItem: removedItem.name,
-    cart,
+    removedItem: removedItemName,
+    cart: cartWithTotals,
   });
 });
 
@@ -317,21 +335,28 @@ exports.removeFromCart = catchAsync(async (req, res, next) => {
 // @route   DELETE /api/orders/cart/clear
 // @access  Private
 exports.clearCart = catchAsync(async (req, res, next) => {
-  const userId = req.user._id.toString();
-  const cart = await getUserCart(userId);
+  // ✅ Use 'user' field to match schema
+  const cart = await Cart.findOne({ user: req.user._id });
+  if (!cart) {
+    return next(new AppError("Cart not found", 404));
+  }
 
   const itemCount = cart.items.length;
   cart.items = [];
   cart.discountAmount = 0;
   cart.couponCode = null;
+  cart.discountType = null;
   cart.freeShipping = false;
 
   await cart.save();
 
+  // ✅ Get empty cart response
+  const cartWithTotals = await cart.getCartWithTotals();
+
   res.status(200).json({
     success: true,
     message: `${itemCount} items removed from cart`,
-    cart,
+    cart: cartWithTotals,
   });
 });
 
@@ -339,53 +364,33 @@ exports.clearCart = catchAsync(async (req, res, next) => {
 // @route   GET /api/orders/cart
 // @access  Private
 exports.getCartItems = catchAsync(async (req, res, next) => {
-  const userId = req.user._id.toString();
-  const cart = await Cart.findOne({ user: userId }).populate(
-    "items.productId",
-    "name price images stock isActive specifications"
-  );
+  // ✅ Use 'user' field to match schema
+  let cart = await Cart.findOne({ user: req.user._id });
 
   if (!cart) {
+    // ✅ Return empty cart structure - MINIMAL
     return res.status(200).json({
       success: true,
       cart: {
         items: [],
+        itemCount: 0,
+        totalItems: 0,
         subtotal: 0,
-        shippingCost: 0,
-        taxAmount: 0,
-        discountAmount: 0,
+        gstAmount: 0,
         totalAmount: 0,
       },
     });
   }
 
-  // Validate and update prices
-  let hasChanges = false;
-  for (const item of cart.items) {
-    const product = item.productId;
+  // ✅ Clean up inactive products automatically
+  await cart.removeInactiveProducts();
 
-    // Remove unavailable products
-    if (!product || !product.isActive) {
-      cart.items = cart.items.filter(
-        (i) => i.productId.toString() !== item.productId.toString()
-      );
-      hasChanges = true;
-      continue;
-    }
-
-    // Update prices if changed
-    const currentPrice = product.getPriceForQuantity(item.quantity);
-    if (item.price !== currentPrice) {
-      item.price = currentPrice;
-      hasChanges = true;
-    }
-  }
-
-  if (hasChanges) await cart.save();
+  // ✅ Get BASIC cart data only - no shipping/coupon calculations
+  const basicCart = await cart.getBasicCart();
 
   res.status(200).json({
     success: true,
-    cart,
+    cart: basicCart,
   });
 });
 
@@ -476,151 +481,75 @@ exports.calculateShipping = catchAsync(async (req, res, next) => {
     shippingOptions,
   });
 });
-// @desc    Create new order
-// @route   POST /api/orders/create
-// @access  Private
 exports.createOrder = catchAsync(async (req, res, next) => {
-  const {
-    shippingAddress,
-    billingAddress,
-    paymentMethod,
-    shippingOption,
-    orderNotes,
-    useCartItems = true,
-  } = req.body;
+  const userId = req.user._id.toString();
+  const { shippingAddress, useCartItems = true } = req.body;
 
   if (!shippingAddress) {
     return next(new AppError("Shipping address is required", 400));
   }
 
-  if (!paymentMethod) {
-    return next(new AppError("Payment method is required", 400));
+  // 1. Get user cart
+  const cart = await getUserCart(userId);
+  if (!cart || !cart.items.length) {
+    return next(new AppError("Cart is empty", 400));
   }
 
-  let orderItems = [];
-  let cart = null;
-  const userId = req.user._id.toString();
-
-  if (useCartItems) {
-    cart = await getUserCart(userId);
-    if (cart.items.length === 0) {
-      return next(new AppError("Cart is empty", 400));
-    }
-    orderItems = cart.items;
-  } else {
-    orderItems = req.body.items || [];
-  }
-
-  if (orderItems.length === 0) {
-    return next(new AppError("No items to order", 400));
-  }
-
-  // Validate all items
-  const { validationErrors, validatedItems } = await validateCartItems(
-    orderItems.map((item) => ({
-      productId: item.productId || item.product,
+  // 2. Validate and prepare items
+  const { validatedItems, validationErrors } = await validateCartItems(
+    cart.items.map((item) => ({
+      productId: item.productId,
       quantity: item.quantity,
       price: item.price,
     }))
   );
 
   if (validationErrors.length > 0) {
-    return next(
-      new AppError(`Validation errors: ${validationErrors.join(", ")}`, 400)
-    );
+    return next(new AppError(`Errors: ${validationErrors.join(", ")}`, 400));
   }
 
-  // Calculate order totals
-  let subtotal = 0;
-  const orderItemsData = [];
+  const items = validatedItems.map((item) => ({
+    product: item.product._id,
+    name: item.product.name,
+    sku: item.product.sku,
+    quantity: item.quantity,
+    price: item.currentPrice,
+    totalPrice: item.currentPrice * item.quantity,
+    image: item.product.primaryImage,
+  }));
 
-  for (const validatedItem of validatedItems) {
-    const itemTotal = validatedItem.currentPrice * validatedItem.quantity;
-    subtotal += itemTotal;
-
-    orderItemsData.push({
-      product: validatedItem.product._id,
-      name: validatedItem.product.name,
-      image: validatedItem.product.primaryImage,
-      sku: validatedItem.product.sku,
-      quantity: validatedItem.quantity,
-      price: validatedItem.currentPrice,
-      totalPrice: itemTotal,
-    });
-  }
-
-  // Calculate shipping
-  const shipping = shippingOption || { cost: 0 };
-  const shippingCost = cart?.freeShipping ? 0 : shipping.cost;
-
-  // Calculate tax (18% GST)
+  const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
   const taxAmount = Math.round(subtotal * 0.18 * 100) / 100;
+  const totalAmount = subtotal + taxAmount;
 
-  // Apply discount
-  const discountAmount = cart?.discountAmount || 0;
-
-  const totalAmount = subtotal + shippingCost + taxAmount - discountAmount;
-
-  // Create order
   const order = await Order.create({
     user: userId,
-    items: orderItemsData,
+    items,
     shippingAddress,
-    billingAddress: billingAddress || shippingAddress,
-    paymentInfo: {
-      method: paymentMethod,
-      status: paymentMethod === "cod" ? "pending" : "pending",
-    },
+    paymentInfo: { method: "manual", status: "pending" },
     subtotal,
-    shippingCost,
     taxAmount,
-    discountAmount,
     totalAmount,
-    orderNotes,
-    couponCode: cart?.couponCode,
     status: "pending",
-    shippingOption: shippingOption?.type || "standard",
-    estimatedDelivery:
-      shippingOption?.estimatedDelivery ||
-      new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
   });
-  await order.save();
 
-  // Clear cart if using cart items
-  if (useCartItems && cart) {
-    cart.items = [];
-    cart.discountAmount = 0;
-    cart.couponCode = null;
-    cart.freeShipping = false;
-    await cart.save();
-  }
+  // 3. Clear cart
+  cart.items = [];
+  await cart.save();
 
-  // Update product stock
-  for (const item of orderItemsData) {
-    await Product.findByIdAndUpdate(item.product, {
-      $inc: { stock: -item.quantity },
-    });
-  }
-
-  // Send order confirmation email
-  try {
-    await sendOrderConfirmationEmail(order, req.user);
-  } catch (error) {
-    console.log("Order confirmation email failed:", error.message);
-  }
-
+  // 4. Respond
   res.status(201).json({
     success: true,
-    message: "Order created successfully",
+    message: "Order placed successfully",
     order: {
       _id: order._id,
       orderNumber: order.orderNumber,
       totalAmount: order.totalAmount,
       status: order.status,
-      estimatedDelivery: order.estimatedDelivery,
     },
   });
 });
+
 // @desc    Apply discount/coupon
 // @route   POST /api/orders/apply-discount
 // @access  Private
@@ -808,77 +737,99 @@ Electronics Marketplace Team
   });
 };
 
-// Continuation of orderController.js
-
-// @desc    Get user's orders
-// @route   GET /api/orders/my-orders
+// @desc    Get user's orders with search functionality
+// @route   GET /api/orders
 // @access  Private
 exports.getUserOrders = catchAsync(async (req, res, next) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
   const status = req.query.status;
-  const sortBy = req.query.sortBy || "-createdAt";
-
-  const skip = (page - 1) * limit;
+  const search = req.query.search;
+  const sortBy = req.query.sortBy || "createdAt";
+  const sortOrder = req.query.sortOrder || "desc";
 
   // Build query
   let query = { user: req.user._id };
 
+  // Status filter
   if (status) {
     query.status = status;
   }
 
-  const orders = await Order.find(query)
-    .populate("items.product", "name images price")
-    .sort(sortBy)
-    .skip(skip)
-    .limit(limit);
+  // Search functionality
+  if (search) {
+    query.$or = [
+      { orderNumber: { $regex: search, $options: "i" } },
+      { "items.name": { $regex: search, $options: "i" } },
+      { invoiceNumber: { $regex: search, $options: "i" } },
+    ];
+  }
 
-  const totalOrders = await Order.countDocuments(query);
+  // Build sort object
+  const sortObj = {};
+  sortObj[sortBy] = sortOrder === "desc" ? -1 : 1;
 
-  // Calculate order statistics
-  const orderStats = await Order.aggregate([
-    { $match: { user: req.user._id } },
-    {
-      $group: {
-        _id: "$status",
-        count: { $sum: 1 },
-        totalAmount: { $sum: "$totalAmount" },
+  try {
+    // Get orders with population
+    const orders = await Order.find(query)
+      .populate("items.product", "name images price specifications")
+      .populate("user", "name email phone")
+      .sort(sortObj);
+
+    // Calculate order statistics for all user orders (not filtered)
+    const orderStats = await Order.aggregate([
+      { $match: { user: req.user._id } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          totalAmount: { $sum: "$totalAmount" },
+        },
       },
-    },
-  ]);
+    ]);
 
-  const stats = {
-    total: 0,
-    pending: 0,
-    processing: 0,
-    shipped: 0,
-    delivered: 0,
-    cancelled: 0,
-    totalSpent: 0,
-  };
+    // Calculate total spent from delivered orders only
+    const totalSpentResult = await Order.aggregate([
+      {
+        $match: {
+          user: req.user._id,
+          status: "delivered",
+          "paymentInfo.status": "completed",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSpent: { $sum: "$totalAmount" },
+        },
+      },
+    ]);
 
-  orderStats.forEach((stat) => {
-    stats[stat._id] = stat.count;
-    stats.total += stat.count;
-    if (stat._id === "delivered") {
-      stats.totalSpent += stat.totalAmount;
-    }
-  });
+    const stats = {
+      total: 0,
+      pending: 0,
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0,
+      refunded: 0,
+      totalSpent:
+        totalSpentResult.length > 0 ? totalSpentResult[0].totalSpent : 0,
+    };
 
-  res.status(200).json({
-    success: true,
-    results: orders.length,
-    totalOrders,
-    pagination: {
-      currentPage: page,
-      totalPages: Math.ceil(totalOrders / limit),
-      hasNextPage: page < Math.ceil(totalOrders / limit),
-      hasPrevPage: page > 1,
-    },
-    stats,
-    orders,
-  });
+    orderStats.forEach((stat) => {
+      stats[stat._id] = stat.count;
+      stats.total += stat.count;
+    });
+
+    res.status(200).json({
+      success: true,
+      results: orders.length,
+      stats,
+      orders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return next(new AppError("Error fetching orders", 500));
+  }
 });
 
 // @desc    Get single order by ID
@@ -898,7 +849,7 @@ exports.getOrderById = catchAsync(async (req, res, next) => {
     return next(new AppError("Access denied", 403));
   }
 
-  // Calculate Delivery Time(Approx)line
+  // Create order timeline based on your model structure
   const timeline = [
     {
       status: "pending",
@@ -933,12 +884,49 @@ exports.getOrderById = catchAsync(async (req, res, next) => {
   });
 });
 
+// @desc    Update order status (Admin only)
+// @route   PATCH /api/orders/:id/status
+// @access  Private/Admin
+exports.updateOrderStatus = catchAsync(async (req, res, next) => {
+  const { status } = req.body;
+
+  const validStatuses = [
+    "pending",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled",
+    "refunded",
+  ];
+
+  if (!validStatuses.includes(status)) {
+    return next(new AppError("Invalid status", 400));
+  }
+
+  const order = await Order.findById(req.params.id);
+
+  if (!order) {
+    return next(new AppError("Order not found", 404));
+  }
+
+  // Update status
+  order.status = status;
+
+  // The pre-save middleware in your model will handle the timestamp updates
+  await order.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Order status updated successfully",
+    order,
+  });
+});
+
 // @desc    Cancel order
-// @route   PUT /api/orders/:id/cancel
+// @route   PATCH /api/orders/:id/cancel
 // @access  Private
 exports.cancelOrder = catchAsync(async (req, res, next) => {
   const { reason } = req.body;
-
   const order = await Order.findById(req.params.id);
 
   if (!order) {
@@ -950,61 +938,54 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
     return next(new AppError("Access denied", 403));
   }
 
-  // Check if order can be cancelled
-  if (!["pending", "processing"].includes(order.status)) {
-    return next(new AppError("Order cannot be cancelled at this stage", 400));
-  }
-
   try {
-    await order.cancelOrder(reason || "Cancelled by customer");
-
-    // Restore product stock
-    for (const item of order.items) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: item.quantity },
-      });
-    }
-
-    // Send cancellation email
-    try {
-      await sendEmail({
-        email: req.user.email,
-        subject: `Order Cancelled - ${order.orderNumber}`,
-        message: `Your order ${
-          order.orderNumber
-        } has been cancelled successfully. ${
-          reason ? `Reason: ${reason}` : ""
-        }`,
-        html: `
-          <h2>Order Cancellation Confirmation</h2>
-          <p>Your order <strong>${
-            order.orderNumber
-          }</strong> has been cancelled successfully.</p>
-          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}
-          <p>If you paid for this order, you will receive a refund within 5-7 business days.</p>
-          <p>Best regards,<br>Electronics Marketplace Team</p>
-        `,
-      });
-    } catch (error) {
-      console.log("Order cancellation email failed:", error.message);
-    }
+    await order.cancelOrder(reason);
 
     res.status(200).json({
       success: true,
       message: "Order cancelled successfully",
-      order: {
-        _id: order._id,
-        orderNumber: order.orderNumber,
-        status: order.status,
-        cancelledAt: order.cancelledAt,
-        cancellationReason: order.cancellationReason,
-      },
+      order,
     });
   } catch (error) {
     return next(new AppError(error.message, 400));
   }
 });
 
+// @desc    Search orders (additional search endpoint if needed)
+// @route   GET /api/orders/search
+// @access  Private
+exports.searchOrders = catchAsync(async (req, res, next) => {
+  const { q, status, limit = 10 } = req.query;
+
+  if (!q) {
+    return next(new AppError("Search query is required", 400));
+  }
+
+  let query = {
+    user: req.user._id,
+    $or: [
+      { orderNumber: { $regex: q, $options: "i" } },
+      { "items.name": { $regex: q, $options: "i" } },
+      { invoiceNumber: { $regex: q, $options: "i" } },
+      { trackingNumber: { $regex: q, $options: "i" } },
+    ],
+  };
+
+  if (status) {
+    query.status = status;
+  }
+
+  const orders = await Order.find(query)
+    .populate("items.product", "name images price")
+    .sort({ createdAt: -1 })
+    .limit(parseInt(limit));
+
+  res.status(200).json({
+    success: true,
+    results: orders.length,
+    orders,
+  });
+});
 // @desc    Get order tracking information
 // @route   GET /api/orders/:id/tracking
 // @access  Private

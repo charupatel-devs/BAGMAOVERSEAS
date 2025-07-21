@@ -52,12 +52,7 @@ const productSchema = new mongoose.Schema(
       max: [100, "GST cannot exceed 100%"],
       default: 18, // Default GST rate in India
     },
-    sku: {
-      type: String,
-      required: [true, "Please provide SKU"],
-      unique: true,
-      uppercase: true,
-    },
+
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
@@ -68,16 +63,7 @@ const productSchema = new mongoose.Schema(
       required: [true, "Please provide product price"],
       min: [0, "Price cannot be negative"],
     },
-    originalPrice: {
-      type: Number,
-      min: [0, "Original price cannot be negative"],
-    },
-    discount: {
-      type: Number,
-      default: 0,
-      min: [0, "Discount cannot be negative"],
-      max: [100, "Discount cannot exceed 100%"],
-    },
+
     priceBreaks: [
       {
         quantity: {
@@ -134,18 +120,12 @@ const productSchema = new mongoose.Schema(
       enum: ["piece", "meter", "kilogram", "liter", "box", "pack"],
     },
     weight: {
-      type: Number,
+      type: String,
       min: 0,
     },
     dimensions: {
-      length: Number,
-      width: Number,
-      height: Number,
-      unit: {
-        type: String,
-        enum: ["mm", "cm", "inch"],
-        default: "mm",
-      },
+      length: String,
+      width: String,
     },
     tags: [String],
     isFeatured: {
@@ -223,7 +203,6 @@ productSchema.index({ averageRating: -1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ isFeatured: 1 });
 productSchema.index({ isActive: 1 });
-productSchema.index({ sku: 1 });
 productSchema.index({ stock: 1 });
 
 // Create compound indexes for common specification filters

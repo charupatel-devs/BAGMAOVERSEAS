@@ -25,10 +25,13 @@ import Footer from "../components/customer/layout/Footer";
 import Header from "../components/customer/layout/Header";
 import ProductViewPage from "../components/customer/products/ProductViewPage";
 import AboutUs from "../pages/customer/AboutUs";
+import AddressSelection from "../pages/customer/AddressSelection";
 import Home from "../pages/customer/Home";
+import OrderConfirmation from "../pages/customer/OrderConfirmation";
 import Orders from "../pages/customer/Orders";
 import ProductsList from "../pages/customer/ProductList";
 import Profile from "../pages/customer/Profile";
+import ViewCart from "../pages/customer/ViewCart";
 // Protected Route Component
 // import ProtectedRoute from "./ProtectedRoute";
 
@@ -56,7 +59,11 @@ const CustomerRoutes = () => {
         <Route path="/products" element={<ProductsList />} />
         <Route path="/products/:productId" element={<ProductViewPage />} />
         <Route path="/my-orders" element={<Orders />} />
+        <Route path="/cart" element={<ViewCart />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/order-success" element={<OrderConfirmation />} />
+        <Route path="/select-address" element={<AddressSelection />} />
+
         {/* <Route path="/search" element={<SearchResultsPage />} /> */}
         {/* Static Pages */}
         <Route path="/about" element={<AboutUs />} />

@@ -1,6 +1,15 @@
 import toast from "react-hot-toast";
 import {
+  AddAddressFailure,
+  AddAddressStart,
+  AddAddressSuccess,
   ClearUserError,
+  DeleteAddressSuccess,
+  FetchAddressesFailure,
+  FetchAddressesStart,
+  FetchAddressesSuccess,
+  SetDefaultAddressSuccess,
+  UpdateAddressSuccess,
   UserLoginFailure,
   UserLoginStart,
   UserLoginSuccess,
@@ -441,31 +450,36 @@ export const validateUserToken = async () => {
 
 // ===== ADDRESS MANAGEMENT SERVICES =====
 
-// Get user addresses
-export const getUserAddresses = async () => {
+export const getUserAddresses = async (dispatch) => {
+  dispatch(FetchAddressesStart());
   try {
     const { data } = await api.get("/user/addresses");
-    console.log("Addresses fetched:", data);
+    dispatch(FetchAddressesSuccess(data.addresses || data));
     return data;
   } catch (error) {
-    console.error("Failed to fetch addresses:", parseError(error));
+    const errorMsg = parseError(error);
+    dispatch(FetchAddressesFailure(errorMsg));
+    toast.error(errorMsg, {
+      id: "fetch-address",
+      ...ErrorToastOptions,
+    });
     throw error;
   }
 };
 
-// Add new address
 export const addUserAddress = async (dispatch, addressData) => {
+  dispatch(AddAddressStart());
   try {
-    console.log("Adding new address:", addressData);
     const { data } = await api.post("/user/addresses", addressData);
+    dispatch(AddAddressSuccess(data.address || data));
     toast.success("Address added successfully!", {
       id: "add-address",
       ...SuccessToastOptions,
     });
-    console.log("Address added:", data);
     return data;
   } catch (error) {
     const errorMsg = parseError(error);
+    dispatch(AddAddressFailure(errorMsg));
     toast.error(errorMsg, {
       id: "add-address-error",
       ...ErrorToastOptions,
@@ -474,15 +488,14 @@ export const addUserAddress = async (dispatch, addressData) => {
   }
 };
 
-// Update address
-export const updateUserAddress = async (addressId, addressData) => {
+export const updateUserAddress = async (dispatch, addressId, addressData) => {
   try {
     const { data } = await api.put(`/user/addresses/${addressId}`, addressData);
+    dispatch(UpdateAddressSuccess(data.address || data));
     toast.success("Address updated successfully!", {
       id: "update-address",
       ...SuccessToastOptions,
     });
-    console.log("Address updated:", data);
     return data;
   } catch (error) {
     const errorMsg = parseError(error);
@@ -494,16 +507,15 @@ export const updateUserAddress = async (addressId, addressData) => {
   }
 };
 
-// Delete address
-export const deleteUserAddress = async (addressId) => {
+export const deleteUserAddress = async (dispatch, addressId) => {
   try {
-    const { data } = await api.delete(`/user/addresses/${addressId}`);
+    await api.delete(`/user/addresses/${addressId}`);
+    dispatch(DeleteAddressSuccess(addressId));
     toast.success("Address deleted successfully!", {
       id: "delete-address",
       ...SuccessToastOptions,
     });
-    console.log("Address deleted:", data);
-    return data;
+    return addressId;
   } catch (error) {
     const errorMsg = parseError(error);
     toast.error(errorMsg, {
@@ -514,15 +526,14 @@ export const deleteUserAddress = async (addressId) => {
   }
 };
 
-// Set default address
-export const setDefaultAddress = async (addressId) => {
+export const setDefaultAddress = async (dispatch, addressId) => {
   try {
     const { data } = await api.put(`/user/addresses/${addressId}/default`);
+    dispatch(SetDefaultAddressSuccess(data.address || data));
     toast.success("Default address updated!", {
       id: "set-default-address",
       ...SuccessToastOptions,
     });
-    console.log("Default address set:", data);
     return data;
   } catch (error) {
     const errorMsg = parseError(error);
@@ -530,18 +541,6 @@ export const setDefaultAddress = async (addressId) => {
       id: "set-default-error",
       ...ErrorToastOptions,
     });
-    throw error;
-  }
-};
-
-// Get default address
-export const getDefaultAddress = async () => {
-  try {
-    const { data } = await api.get("/user/addresses/default");
-    console.log("Default address fetched:", data);
-    return data;
-  } catch (error) {
-    console.error("Failed to fetch default address:", parseError(error));
     throw error;
   }
 };
@@ -570,5 +569,4 @@ export default {
   updateUserAddress,
   deleteUserAddress,
   setDefaultAddress,
-  getDefaultAddress,
 };
