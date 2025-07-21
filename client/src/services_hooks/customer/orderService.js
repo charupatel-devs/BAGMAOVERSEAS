@@ -31,6 +31,12 @@ const InfoToastOptions = {
   style: { background: "#60a5fa", color: "#fff" },
 };
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("authToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 // Parse error messages
 const parseError = (error) => {
   if (error.response) {
@@ -65,7 +71,9 @@ export const fetchUserOrders = async (params = {}, dispatch) => {
     query.set("sortBy", filters.sortBy || sortBy);
     query.set("sortOrder", filters.sortOrder || sortOrder);
 
-    const response = await api.get(`/orders?${query.toString()}`);
+    const response = await api.get(`/orders?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    });
     dispatch(fetchOrdersSuccess(response.data));
   } catch (error) {
     console.error("Fetch orders error:", error);
@@ -76,7 +84,9 @@ export const fetchUserOrders = async (params = {}, dispatch) => {
 export const fetchOrderById = async (dispatch, orderId) => {
   try {
     dispatch(fetchOrderStart());
-    const res = await api.get(`/orders/${orderId}`);
+    const res = await api.get(`/orders/${orderId}`, {
+      headers: getAuthHeaders(),
+    });
     dispatch(fetchOrderSuccess(res.data.order));
     return res.data;
   } catch (error) {
@@ -86,6 +96,7 @@ export const fetchOrderById = async (dispatch, orderId) => {
     return null;
   }
 };
+
 /// ✅ Create new order from cart
 export const createOrder = async (dispatch, orderData) => {
   try {
@@ -102,16 +113,19 @@ export const createOrder = async (dispatch, orderData) => {
       useCartItems,
     };
 
-    const response = await api.post("/orders/create", payload); // ✅ Correct endpoint
+    const response = await api.post("/orders/create", payload, {
+      headers: getAuthHeaders(),
+    });
     const createdOrder = response.data.order || response.data;
 
-    dispatch(updateOrderSuccess(createdOrder));
+    dispatch(createOrderSuccess(createdOrder));
     toast.success("Order placed successfully!", SuccessToastOptions);
 
-    return response.success;
+    return response.data;
   } catch (error) {
+    console.error("Create order error:", error);
     const errorMessage = parseError(error);
-    dispatch(updateOrderFailure(errorMessage));
+    dispatch(createOrderFailure(errorMessage));
     toast.error(errorMessage, ErrorToastOptions);
     return null;
   }
@@ -146,7 +160,9 @@ export const requestReturn = async (dispatch, orderId, returnData) => {
       returnType,
     };
 
-    const response = await api.post(`/orders/${orderId}/return`, payload);
+    const response = await api.post(`/orders/${orderId}/return`, payload, {
+      headers: getAuthHeaders(),
+    });
     const returnRequest = response.data.return || response.data;
 
     toast.success(
@@ -169,7 +185,9 @@ export const getOrderReturns = async (orderId) => {
       throw new Error("Order ID is required");
     }
 
-    const response = await api.get(`/orders/${orderId}/returns`);
+    const response = await api.get(`/orders/${orderId}/returns`, {
+      headers: getAuthHeaders(),
+    });
     const returnsData = response.data.returns || response.data;
 
     return returnsData;
@@ -203,7 +221,9 @@ export const submitOrderReview = async (orderId, reviewData) => {
       overallComment,
     };
 
-    const response = await api.post(`/orders/${orderId}/review`, payload);
+    const response = await api.post(`/orders/${orderId}/review`, payload, {
+      headers: getAuthHeaders(),
+    });
     const reviewResult = response.data;
 
     toast.success("Review submitted successfully!", SuccessToastOptions);
@@ -226,7 +246,9 @@ export const getOrderSummary = async (params = {}) => {
     if (endDate) queryParams.append("endDate", endDate);
     if (status) queryParams.append("status", status);
 
-    const response = await api.get(`/orders/summary?${queryParams}`);
+    const response = await api.get(`/orders/summary?${queryParams}`, {
+      headers: getAuthHeaders(),
+    });
     const summaryData = response.data.summary || response.data;
 
     return summaryData;
@@ -246,7 +268,13 @@ export const reorder = async (dispatch, orderId) => {
       throw new Error("Order ID is required");
     }
 
-    const response = await api.post(`/orders/${orderId}/reorder`);
+    const response = await api.post(
+      `/orders/${orderId}/reorder`,
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     const newOrder = response.data.order || response.data;
 
     dispatch(createOrderSuccess(newOrder));
@@ -268,7 +296,13 @@ export const addOrderToCart = async (orderId) => {
       throw new Error("Order ID is required");
     }
 
-    const response = await api.post(`/orders/${orderId}/add-to-cart`);
+    const response = await api.post(
+      `/orders/${orderId}/add-to-cart`,
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     const result = response.data;
 
     toast.success("Items added to cart successfully!", SuccessToastOptions);
@@ -298,7 +332,10 @@ export const updateShippingAddress = async (dispatch, orderId, newAddress) => {
 
     const response = await api.put(
       `/orders/${orderId}/shipping-address`,
-      payload
+      payload,
+      {
+        headers: getAuthHeaders(),
+      }
     );
     const updatedOrder = response.data.order || response.data;
 
@@ -324,7 +361,9 @@ export const getDeliveryEstimate = async (orderId) => {
       throw new Error("Order ID is required");
     }
 
-    const response = await api.get(`/orders/${orderId}/delivery-estimate`);
+    const response = await api.get(`/orders/${orderId}/delivery-estimate`, {
+      headers: getAuthHeaders(),
+    });
     const estimateData = response.data.estimate || response.data;
 
     return estimateData;
@@ -342,7 +381,13 @@ export const confirmOrderReceipt = async (orderId) => {
       throw new Error("Order ID is required");
     }
 
-    const response = await api.post(`/orders/${orderId}/confirm-receipt`);
+    const response = await api.post(
+      `/orders/${orderId}/confirm-receipt`,
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     const result = response.data;
 
     toast.success("Order receipt confirmed!", SuccessToastOptions);
@@ -362,7 +407,9 @@ export const getOrderNotifications = async (orderId) => {
       throw new Error("Order ID is required");
     }
 
-    const response = await api.get(`/orders/${orderId}/notifications`);
+    const response = await api.get(`/orders/${orderId}/notifications`, {
+      headers: getAuthHeaders(),
+    });
     const notificationsData = response.data.notifications || response.data;
 
     return notificationsData;
@@ -384,7 +431,10 @@ export const subscribeToOrderUpdates = async (orderId, preferences) => {
 
     const response = await api.post(
       `/orders/${orderId}/subscribe-updates`,
-      payload
+      payload,
+      {
+        headers: getAuthHeaders(),
+      }
     );
     const result = response.data;
 
@@ -403,7 +453,9 @@ export const calculateOrderTotal = async (orderData) => {
   try {
     const payload = orderData;
 
-    const response = await api.post("/orders/calculate-total", payload);
+    const response = await api.post("/orders/calculate-total", payload, {
+      headers: getAuthHeaders(),
+    });
     const totalData = response.data.total || response.data;
 
     return totalData;
@@ -419,7 +471,9 @@ export const validateOrder = async (orderData) => {
   try {
     const payload = orderData;
 
-    const response = await api.post("/orders/validate", payload);
+    const response = await api.post("/orders/validate", payload, {
+      headers: getAuthHeaders(),
+    });
     const validationResult = response.data;
 
     if (validationResult.hasIssues) {
@@ -472,7 +526,9 @@ export const createDirectOrder = async (dispatch, orderData) => {
       notes,
     };
 
-    const response = await api.post("/orders/direct", payload);
+    const response = await api.post("/orders/direct", payload, {
+      headers: getAuthHeaders(),
+    });
     const newOrder = response.data.order || response.data;
 
     dispatch(createOrderSuccess(newOrder));
@@ -498,7 +554,9 @@ export const updateOrder = async (dispatch, orderId, updateData) => {
 
     const payload = updateData;
 
-    const response = await api.put(`/orders/${orderId}`, payload);
+    const response = await api.put(`/orders/${orderId}`, payload, {
+      headers: getAuthHeaders(),
+    });
     const updatedOrder = response.data.order || response.data;
 
     dispatch(updateOrderSuccess(updatedOrder));
@@ -524,7 +582,9 @@ export const cancelOrder = async (dispatch, orderId, reason = "") => {
 
     const payload = { reason };
 
-    const response = await api.post(`/orders/${orderId}/cancel`, payload);
+    const response = await api.post(`/orders/${orderId}/cancel`, payload, {
+      headers: getAuthHeaders(),
+    });
     const cancelledOrder = response.data.order || response.data;
 
     dispatch(cancelOrderSuccess(cancelledOrder));
@@ -546,7 +606,9 @@ export const trackOrder = async (orderId) => {
       throw new Error("Order ID is required");
     }
 
-    const response = await api.get(`/orders/${orderId}/track`);
+    const response = await api.get(`/orders/${orderId}/track`, {
+      headers: getAuthHeaders(),
+    });
     const trackingData = response.data.tracking || response.data;
 
     return trackingData;
@@ -566,6 +628,7 @@ export const getOrderInvoice = async (orderId) => {
 
     const response = await api.get(`/orders/${orderId}/invoice`, {
       responseType: "blob", // Important for file download
+      headers: getAuthHeaders(),
     });
 
     // Create blob link to download

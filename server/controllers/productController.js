@@ -400,15 +400,13 @@ const getProductsByCategory = catchAsync(async (req, res, next) => {
 // @route   GET /api/products/featured
 // @access  Public
 const getFeaturedProducts = catchAsync(async (req, res, next) => {
-  const limit = parseInt(req.query.limit) || 8;
+  const limit = parseInt(req.query.limit) || 6;
 
   const products = await Product.find({
-    isFeatured: true,
-    isActive: true,
     stock: { $gt: 0 },
   })
-    .populate("category", "name slug")
-    .sort({ averageRating: -1, totalSales: -1 })
+    .populate("category", "name dimensions price images")
+    .sort({ createdAt: -1 }) // 👈 NEWEST FIRST
     .limit(limit);
 
   res.status(200).json({
@@ -417,7 +415,6 @@ const getFeaturedProducts = catchAsync(async (req, res, next) => {
     products,
   });
 });
-
 // @desc    Get new arrivals
 // @route   GET /api/products/new-arrivals
 // @access  Public

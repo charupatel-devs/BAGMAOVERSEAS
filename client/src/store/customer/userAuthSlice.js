@@ -45,6 +45,8 @@ const userAuthSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.error = null;
+      localStorage.setItem("authToken", action.payload.token);
+      localStorage.setItem("authUser", JSON.stringify(action.payload.user));
     },
     UserRegisterFailure: (state, action) => {
       state.loading = false;

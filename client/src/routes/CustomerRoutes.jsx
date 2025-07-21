@@ -1,21 +1,8 @@
 // routes/CustomerRoute.jsx
 import { Navigate, Route, Routes } from "react-router-dom";
 
-// Page Components (these will be created separately)
-// import BulkOrderPage from "../pages/BulkOrderPage";
-// import CartPage from "../pages/CartPage";
-// import CategoryPage from "../pages/CategoryPage";
-// import CheckoutPage from "../pages/customer/CheckoutPage";
+// Page Components
 import ContactUs from "../pages/customer/ContactUs";
-// import ProductDetailPage from "../pages/ProductDetailPage";
-// import ProductsPage from "../pages/ProductsPage";
-// import SearchResultsPage from "../pages/SearchResultsPage";
-
-// Auth Components
-// import ForgotPassword from "../components/auth/ForgotPassword";
-// import LoginForm from "../components/auth/LoginForm";
-// import RegisterForm from "../components/auth/RegisterForm";
-// import UserProfile from "../components/auth/UserProfile";
 
 // Layout Components
 import AuthSuccess from "../components/customer/auth/AuthSuccess";
@@ -32,8 +19,9 @@ import Orders from "../pages/customer/Orders";
 import ProductsList from "../pages/customer/ProductList";
 import Profile from "../pages/customer/Profile";
 import ViewCart from "../pages/customer/ViewCart";
+import ProtectedRoute from "../utils/customer/ProtectedRoute";
+
 // Protected Route Component
-// import ProtectedRoute from "./ProtectedRoute";
 
 // Main Layout Wrapper
 const Layout = ({ children }) => {
@@ -51,30 +39,63 @@ const CustomerRoutes = () => {
   return (
     <Layout>
       <Routes>
-        {/* Public Routes */}
+        {/* Public Routes - No authentication required */}
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/contact" element={<ContactUs />} />
-        {/* Product Routes */}
+        <Route path="/about" element={<AboutUs />} />
+
+        {/* Product Routes - Public (viewing products) */}
         <Route path="/products" element={<ProductsList />} />
         <Route path="/products/:productId" element={<ProductViewPage />} />
-        <Route path="/my-orders" element={<Orders />} />
-        <Route path="/cart" element={<ViewCart />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/order-success" element={<OrderConfirmation />} />
-        <Route path="/select-address" element={<AddressSelection />} />
 
-        {/* <Route path="/search" element={<SearchResultsPage />} /> */}
-        {/* Static Pages */}
-        <Route path="/about" element={<AboutUs />} />
-        {/*<Route path="/contact" element={<ContactPage />} />
-        <Route path="/bulk-order" element={<BulkOrderPage />} /> */}
-        {/* Auth Routes */}
+        {/* Auth Routes - Only for non-authenticated users */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/auth/success" element={<AuthSuccess />} />
 
-        <Route path="/register" element={<Register />} />
-        {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
+        {/* Protected Routes - Require authentication */}
+        <Route
+          path="/my-orders"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <ViewCart />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-success"
+          element={
+            <ProtectedRoute>
+              <OrderConfirmation />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/select-address"
+          element={
+            <ProtectedRoute>
+              <AddressSelection />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Catch all route - 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

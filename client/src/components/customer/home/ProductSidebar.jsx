@@ -1,22 +1,13 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import { fetchCategories } from "../../../services_hooks/customer/categoryService";
 
-const ProductSidebar = () => {
+const ProductSidebar = ({ categories, loading }) => {
   const dispatch = useDispatch();
-
-  // Get categories from Redux store
-  const { categories, loading } = useSelector((state) => state.userCategories);
 
   // Local state to manage expand/collapse
   const [expandedCategories, setExpandedCategories] = useState([]);
-
-  // Fetch categories on mount
-  useEffect(() => {
-    fetchCategories(dispatch);
-  }, [dispatch]);
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) =>

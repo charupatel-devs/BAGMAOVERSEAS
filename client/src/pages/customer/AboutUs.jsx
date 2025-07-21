@@ -1,7 +1,5 @@
 import {
   Award,
-  Building,
-  CheckCircle,
   ChevronRight,
   Clock,
   Eye,
@@ -208,18 +206,6 @@ const AboutUs = () => {
                 quality or sustainability.
               </p>
             </div>
-
-            <div className="flex items-start space-x-3 md:space-x-4">
-              <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#456882] rounded-full mt-2 md:mt-3 flex-shrink-0"></div>
-              <p className="text-sm md:text-base lg:text-lg">
-                Under the leadership of{" "}
-                <span className="font-bold text-[#1B3C53]">
-                  Mr. Mukesh Kumar
-                </span>
-                , we continue to innovate and expand, setting new benchmarks in
-                the global home textiles industry.
-              </p>
-            </div>
           </div>
         </div>
 
@@ -299,92 +285,10 @@ const AboutUs = () => {
           </div>
         </div>
 
-        {/* Leadership Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-12 border border-[#D2C1B6]/30">
-          <h2 className="text-3xl font-bold text-[#1B3C53] mb-8 text-center">
-            Leadership Excellence
-          </h2>
-
-          <div className="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
-            <div className="w-32 h-32 bg-gradient-to-br from-[#456882] to-[#1B3C53] rounded-2xl flex items-center justify-center shadow-lg">
-              <Users className="w-16 h-16 text-white" />
-            </div>
-
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-2xl font-bold text-[#1B3C53] mb-2">
-                Mr. Mukesh Kumar
-              </h3>
-              <p className="text-[#456882] font-medium mb-4">
-                Founder & Managing Director
-              </p>
-              <p className="text-gray-600 leading-relaxed">
-                With over 12 years of industry experience, Mr. Mukesh Kumar has
-                transformed BAGMA Overseas from a startup into a leading global
-                exporter. His vision for quality, innovation, and customer
-                satisfaction continues to drive our success in international
-                markets.
-              </p>
-              <div className="flex items-center justify-center md:justify-start space-x-4 mt-4">
-                <div className="flex items-center space-x-2">
-                  <Award className="w-5 h-5 text-[#456882]" />
-                  <span className="text-sm text-gray-600">Industry Expert</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-5 h-5 text-[#456882]" />
-                  <span className="text-sm text-gray-600">Global Vision</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Certifications & Memberships */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-12 border border-[#D2C1B6]/30">
-          <h2 className="text-3xl font-bold text-[#1B3C53] mb-8 text-center">
-            Certifications & Memberships
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-[#F9F3EF] rounded-xl border border-[#D2C1B6]/20">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#456882] to-[#1B3C53] rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Award className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-[#1B3C53] mb-2">
-                TEXPROCIL
-              </h3>
-              <p className="text-sm text-gray-600">
-                The Cotton Textiles Export Promotion Council
-              </p>
-            </div>
-
-            <div className="text-center p-6 bg-[#F9F3EF] rounded-xl border border-[#D2C1B6]/20">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#456882] to-[#1B3C53] rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Building className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-[#1B3C53] mb-2">
-                ITPO Delhi
-              </h3>
-              <p className="text-sm text-gray-600">
-                India Trade Promotion Organisation
-              </p>
-            </div>
-
-            <div className="text-center p-6 bg-[#F9F3EF] rounded-xl border border-[#D2C1B6]/20">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#456882] to-[#1B3C53] rounded-xl flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-[#1B3C53] mb-2">
-                Delhi Chamber
-              </h3>
-              <p className="text-sm text-gray-600">
-                Delhi Chamber of Commerce & Industry
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Statistics */}
-        <div className="bg-gradient-to-r from-[#1B3C53] to-[#456882] text-white rounded-xl md:rounded-2xl p-4 md:p-8 mb-8 md:mb-12 shadow-xl">
+        {/* <div className="bg-gradient-to-r from-[#1B3C53] to-[#456882] text-white rounded-xl md:rounded-2xl p-4 md:p-8 mb-8 md:mb-12 shadow-xl">
           <div className="text-center mb-4 md:mb-8">
             <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2 md:mb-4">
               Our Impact in Numbers
@@ -392,9 +296,9 @@ const AboutUs = () => {
             <p className="text-sm md:text-base lg:text-lg text-[#D2C1B6]">
               Delivering excellence across global markets
             </p>
-          </div>
+          </div> */}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             <div className="text-center">
               <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#D2C1B6] mb-1 md:mb-2">
                 100K+
@@ -428,7 +332,7 @@ const AboutUs = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Contact Information */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-[#D2C1B6]/30">
@@ -436,13 +340,13 @@ const AboutUs = () => {
             Get in Touch
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             <div className="text-center p-6 bg-[#F9F3EF] rounded-xl border border-[#D2C1B6]/20">
               <div className="w-16 h-16 bg-gradient-to-br from-[#456882] to-[#1B3C53] rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Phone className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-bold text-[#1B3C53] mb-2">Call Us</h3>
-              <p className="text-[#456882] font-medium">+91-804-580-3379</p>
+              <p className="text-[#456882] font-medium">+91-9810735041</p>
               <p className="text-sm text-gray-600 mt-1">Available 24/7</p>
             </div>
 
@@ -454,20 +358,9 @@ const AboutUs = () => {
                 Email Us
               </h3>
               <p className="text-[#456882] font-medium">
-                info@bagmaoverseas.com
+                bagmaoverseas@gmail.com{" "}
               </p>
               <p className="text-sm text-gray-600 mt-1">Quick Response</p>
-            </div>
-
-            <div className="text-center p-6 bg-[#F9F3EF] rounded-xl border border-[#D2C1B6]/20">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#456882] to-[#1B3C53] rounded-xl flex items-center justify-center mx-auto mb-4">
-                <MapPin className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-[#1B3C53] mb-2">
-                Visit Us
-              </h3>
-              <p className="text-[#456882] font-medium">Shiv Nagar, Panipat</p>
-              <p className="text-sm text-gray-600 mt-1">Haryana, India</p>
             </div>
           </div>
         </div>

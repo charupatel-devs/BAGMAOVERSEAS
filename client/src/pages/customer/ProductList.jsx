@@ -1,15 +1,7 @@
-import {
-  ChevronRight,
-  Filter,
-  Heart,
-  Loader2,
-  Package,
-  ShoppingCart,
-  X,
-} from "lucide-react";
+import { ChevronRight, Filter, Heart, Loader2, Package, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Import your actual service functions - replace with your actual imports
 import { fetchCategories } from "../../services_hooks/admin/adminCategory";
@@ -108,28 +100,6 @@ const ProductCard = ({ product }) => {
 
         {/* Action Buttons */}
         <div className="space-y-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("Added to cart:", product.name);
-            }}
-            className={`w-full py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              isInStock
-                ? "bg-gradient-to-r from-[#456882] to-[#1B3C53] text-white hover:shadow-md"
-                : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            }`}
-            disabled={!isInStock}
-          >
-            {isInStock ? (
-              <div className="flex items-center justify-center gap-2">
-                <ShoppingCart className="w-4 h-4" />
-                Add to Cart
-              </div>
-            ) : (
-              "Out of Stock"
-            )}
-          </button>
-
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -357,6 +327,13 @@ const FilterSidebar = ({
 // Main ProductList Component
 const ProductList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // ✅ Get URL search parameters - now properly imported
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get initial search term from URL
+  const initialSearchTerm = searchParams.get("search") || "";
 
   // Redux state - adjust these selectors to match your actual Redux state structure
   const {
@@ -372,7 +349,7 @@ const ProductList = () => {
 
   // Local UI states
   const [viewMode, setViewMode] = useState("grid");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm); // ✅ Initialize with URL search
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -392,6 +369,25 @@ const ProductList = () => {
   // Price range state
   const [priceRange, setPriceRange] = useState([0, 2000]);
 
+  // ✅ Sync searchTerm with URL params
+  useEffect(() => {
+    const urlSearchTerm = searchParams.get("search") || "";
+    if (urlSearchTerm !== searchTerm) {
+      setSearchTerm(urlSearchTerm);
+    }
+  }, [searchParams]);
+
+  // ✅ Update URL when search term changes
+  const updateSearchInURL = (newSearchTerm) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (newSearchTerm.trim()) {
+      newParams.set("search", newSearchTerm.trim());
+    } else {
+      newParams.delete("search");
+    }
+    setSearchParams(newParams);
+  };
+
   // Fetch categories on mount
   useEffect(() => {
     fetchCategories(dispatch);
@@ -410,14 +406,27 @@ const ProductList = () => {
     };
   };
 
+  // Debounced search update
+  const debouncedSearchUpdate = useCallback(
+    debounce((newSearchTerm) => {
+      updateSearchInURL(newSearchTerm);
+    }, 500),
+    [searchParams]
+  );
+
   // Fetch products function
   const fetchProducts = useCallback(async () => {
     try {
-      console.log("Fetching products with filters:");
+      console.log("Fetching products with filters:", {
+        search: searchTerm,
+        category: selectedCategory,
+        page: pageNo,
+      });
+
       await getProducts(dispatch, {
         page: pageNo,
         limit: itemsPerPage,
-        search: searchTerm,
+        search: searchTerm, // This will now include the search from URL
         category: selectedCategory,
         status: localFilters.stockStatus.join(","),
         sortBy: sortBy,
@@ -432,6 +441,7 @@ const ProductList = () => {
     dispatch,
     pageNo,
     itemsPerPage,
+    searchTerm, // Include searchTerm in dependencies
     selectedCategory,
     localFilters,
     sortBy,
@@ -442,7 +452,14 @@ const ProductList = () => {
   // Fetch products when filters change
   useEffect(() => {
     fetchProducts();
-  }, [pageNo, itemsPerPage, selectedCategory, localFilters, sortBy, sortOrder]);
+  }, [fetchProducts]);
+
+  // ✅ Reset page when search term changes
+  useEffect(() => {
+    if (searchTerm !== initialSearchTerm) {
+      setPageNo(1);
+    }
+  }, [searchTerm]);
 
   const handleClearFilters = () => {
     setSelectedCategory("");
@@ -450,6 +467,7 @@ const ProductList = () => {
     setSortBy("createdAt");
     setSortOrder("desc");
     setPageNo(1);
+    setSearchTerm(""); // Clear search term
     setLocalFilters({
       stockStatus: [],
       priceRange: { min: "", max: "" },
@@ -457,6 +475,11 @@ const ProductList = () => {
       newProduct: false,
       onSale: false,
     });
+
+    // Clear search from URL
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("search");
+    setSearchParams(newParams);
   };
 
   const handlePageChange = (newPage) => {
@@ -466,13 +489,15 @@ const ProductList = () => {
     }
   };
 
-  // Client-side search filtering (if you want additional filtering on top of backend)
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Search input handler (for the search bar on products page)
+  const handleSearchInputChange = (e) => {
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+    debouncedSearchUpdate(newSearchTerm);
+  };
 
+  // Client-side search filtering (if you want additional filtering on top of backend)
+  const filteredProducts = products;
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
       {/* Header */}

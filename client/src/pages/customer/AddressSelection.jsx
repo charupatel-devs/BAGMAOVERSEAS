@@ -90,7 +90,6 @@ const AddressSelection = () => {
     const result = await createOrder(dispatch, payload);
 
     if (result.success) {
-      // Pass order data through navigation state
       navigate("/order-success", {
         state: {
           message: "Order placed successfully",

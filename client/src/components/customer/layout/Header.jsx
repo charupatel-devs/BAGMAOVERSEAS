@@ -14,33 +14,62 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "react-hot-toast"; // Adjust based on your toast library
+import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // ✅ Added useLocation
 import { logoutUser } from "../../../services_hooks/customer/userAuthApi";
 
 const Header = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation(); // ✅ Get current location
   const { user, token, loading } = useSelector((state) => state.userAuth);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // const [cartCount, setCartCount] = useState(3);
 
   // Check if user is logged in
   const isLoggedIn = !!(user && token);
 
+  // ✅ Helper function to check if route is active
+  const isActiveRoute = (path) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  // ✅ Function to get active navigation classes
+  const getNavLinkClass = (path, isMobile = false) => {
+    const isActive = isActiveRoute(path);
+
+    if (isMobile) {
+      return `flex items-center space-x-3 font-medium py-2 md:py-3 px-3 md:px-4 rounded-lg md:rounded-xl transition-all duration-300 ${
+        isActive
+          ? "text-white bg-gradient-to-r from-[#456882] to-[#1B3C53] shadow-lg"
+          : "text-[#456882] hover:text-[#1B3C53] hover:bg-[#F9F3EF]"
+      }`;
+    }
+
+    return `relative font-medium px-6 py-3 rounded-xl transition-all duration-300 group ${
+      isActive
+        ? "text-white bg-gradient-to-r from-[#456882] to-[#1B3C53] shadow-lg"
+        : "text-[#456882] hover:text-[#1B3C53] hover:bg-[#F9F3EF]"
+    }`;
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log("Searching for:", searchQuery);
-    // Add your search logic here
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery);
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   const handleLogout = async () => {
     try {
       logoutUser(dispatch);
-      // navigate('/');
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Error during logout");
@@ -73,7 +102,6 @@ const Header = () => {
               GST: 06AJVPP1131B1ZG
             </span>
           </div>
-          {/* Mobile - Show only rating */}
           <div className="lg:hidden flex items-center">
             <span className="flex items-center text-xs">
               <Star className="w-3 h-3 mr-1 text-yellow-400" />
@@ -86,7 +114,7 @@ const Header = () => {
       {/* Main Header */}
       <div className="container mx-auto px-2 md:px-4 py-1 md:py-6">
         <div className="flex items-center justify-between">
-          {/* Enhanced Logo - Responsive */}
+          {/* Logo */}
           <Link
             to="/"
             className="flex items-center space-x-2 md:space-x-4 group"
@@ -98,7 +126,6 @@ const Header = () => {
                 className="w-40"
               />
             </div>
-
             <div className="flex flex-col">
               <h1 className="text-lg md:text-3xl font-bold text-[#1B3C53] group-hover:text-[#456882] transition-colors">
                 BAGMA OVERSEAS
@@ -109,9 +136,9 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Enhanced Search Bar */}
+          {/* Search Bar */}
           <div className="hidden lg:flex flex-1 max-w-2xl mx-8">
-            <div className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full">
               <div className="relative">
                 <input
                   type="text"
@@ -122,17 +149,16 @@ const Header = () => {
                 />
                 <Search className="absolute left-4 top-4 h-6 w-6 text-[#456882]" />
                 <button
-                  type="button"
-                  onClick={handleSearch}
+                  type="submit"
                   className="absolute right-2 top-2 bg-[#456882] hover:bg-[#1B3C53] text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center space-x-1"
                 >
                   <span className="font-medium">Search</span>
                 </button>
               </div>
-            </div>
+            </form>
           </div>
 
-          {/* Enhanced Actions - Mobile Optimized */}
+          {/* Actions */}
           <div className="flex items-center space-x-1 md:space-x-4">
             {/* Shopping Cart */}
             <Link
@@ -140,14 +166,9 @@ const Header = () => {
               className="relative p-2 md:p-3 text-[#456882] hover:text-[#1B3C53] hover:bg-[#F9F3EF] rounded-lg md:rounded-xl transition-all duration-300 group"
             >
               <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
-              {/* {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#456882] text-white text-xs rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center font-bold animate-bounce">
-                  {cartCount}
-                </span>
-              )} */}
             </Link>
 
-            {/* Notifications - Hidden on mobile, only show when logged in */}
+            {/* Notifications */}
             {isLoggedIn && (
               <button className="hidden md:flex relative p-3 text-[#456882] hover:text-[#1B3C53] hover:bg-[#F9F3EF] rounded-xl transition-all duration-300 group">
                 <Bell className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -155,7 +176,7 @@ const Header = () => {
               </button>
             )}
 
-            {/* User Account - Updated for auth state */}
+            {/* User Account */}
             <div className="relative">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -235,7 +256,6 @@ const Header = () => {
                           <Package className="w-4 h-4" />
                           <span>My Orders</span>
                         </Link>
-
                         <div className="border-t border-[#D2C1B6] my-2"></div>
                         <button
                           onClick={handleLogout}
@@ -283,45 +303,55 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Enhanced Navigation */}
+        {/* ✅ Enhanced Navigation with Dynamic Highlighting */}
         <nav className="hidden lg:flex mt-1 space-x-8 border-t border-[#D2C1B6] pt-1">
-          <Link
-            to="/"
-            className="relative text-white bg-gradient-to-r from-[#456882] to-[#1B3C53] px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-300 group"
-          >
+          <Link to="/" className={getNavLinkClass("/")}>
             <span className="relative z-10">Home</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1B3C53] to-[#456882] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </Link>
-          <Link
-            to="/products"
-            className="relative text-[#456882] hover:text-[#1B3C53] font-medium px-6 py-3 rounded-xl hover:bg-[#F9F3EF] transition-all duration-300 group"
-          >
-            Our Products
-            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#456882] group-hover:w-full transition-all duration-300"></div>
+            {isActiveRoute("/") && (
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1B3C53] to-[#456882] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            )}
+            {!isActiveRoute("/") && (
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#456882] group-hover:w-full transition-all duration-300"></div>
+            )}
           </Link>
 
-          <Link
-            to="/about"
-            className="relative text-[#456882] hover:text-[#1B3C53] font-medium px-6 py-3 rounded-xl hover:bg-[#F9F3EF] transition-all duration-300 group"
-          >
-            About Us
-            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#456882] group-hover:w-full transition-all duration-300"></div>
+          <Link to="/products" className={getNavLinkClass("/products")}>
+            <span className="relative z-10">Our Products</span>
+            {isActiveRoute("/products") && (
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1B3C53] to-[#456882] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            )}
+            {!isActiveRoute("/products") && (
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#456882] group-hover:w-full transition-all duration-300"></div>
+            )}
           </Link>
-          <Link
-            to="/contact"
-            className="relative text-[#456882] hover:text-[#1B3C53] font-medium px-6 py-3 rounded-xl hover:bg-[#F9F3EF] transition-all duration-300 group"
-          >
-            Contact Us
-            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#456882] group-hover:w-full transition-all duration-300"></div>
+
+          <Link to="/about" className={getNavLinkClass("/about")}>
+            <span className="relative z-10">About Us</span>
+            {isActiveRoute("/about") && (
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1B3C53] to-[#456882] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            )}
+            {!isActiveRoute("/about") && (
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#456882] group-hover:w-full transition-all duration-300"></div>
+            )}
+          </Link>
+
+          <Link to="/contact" className={getNavLinkClass("/contact")}>
+            <span className="relative z-10">Contact Us</span>
+            {isActiveRoute("/contact") && (
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1B3C53] to-[#456882] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            )}
+            {!isActiveRoute("/contact") && (
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#456882] group-hover:w-full transition-all duration-300"></div>
+            )}
           </Link>
         </nav>
 
-        {/* Enhanced Mobile Menu */}
+        {/* ✅ Enhanced Mobile Menu with Dynamic Highlighting */}
         {isMenuOpen && (
           <div className="lg:hidden mt-4 md:mt-6 border-t border-[#D2C1B6] pt-4 md:pt-6">
             <div className="flex flex-col space-y-3 md:space-y-4">
               {/* Mobile Search */}
-              <div className="relative mb-3 md:mb-4">
+              <form onSubmit={handleSearch} className="relative mb-3 md:mb-4">
                 <input
                   type="text"
                   placeholder="Search products..."
@@ -330,86 +360,33 @@ const Header = () => {
                   className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 border-2 border-[#D2C1B6] rounded-lg md:rounded-xl focus:outline-none focus:border-[#456882] bg-[#F9F3EF]/50 text-sm md:text-base"
                 />
                 <Search className="absolute left-3 md:left-4 top-2.5 md:top-3.5 h-4 w-4 md:h-5 md:w-5 text-[#456882]" />
-              </div>
+              </form>
 
-              {/* Mobile Actions Row - Only on small screens */}
-              <div className="flex items-center justify-around py-3 bg-[#F9F3EF] rounded-lg sm:hidden">
-                <Link
-                  to="/cart"
-                  className="flex flex-col items-center space-y-1 text-[#456882]"
-                >
-                  <div className="relative">
-                    <ShoppingCart className="w-6 h-6" />
-                    {cartCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-[#456882] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
-                        {cartCount}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs">Cart</span>
-                </Link>
-
-                {isLoggedIn ? (
-                  <Link
-                    to="/profile"
-                    className="flex flex-col items-center space-y-1 text-[#456882]"
-                  >
-                    <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gradient-to-br from-[#456882] to-[#1B3C53]">
-                      {user?.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={user.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-4 h-4 text-white mt-1 ml-1" />
-                      )}
-                    </div>
-                    <span className="text-xs">Profile</span>
-                  </Link>
-                ) : (
-                  <Link
-                    to="/login"
-                    className="flex flex-col items-center space-y-1 text-[#456882]"
-                  >
-                    <User className="w-6 h-6" />
-                    <span className="text-xs">Login</span>
-                  </Link>
-                )}
-              </div>
-
-              {/* Mobile Navigation Links */}
+              {/* Mobile Navigation Links with Dynamic Highlighting */}
               <Link
                 to="/"
-                className="flex items-center space-x-3 text-[#456882] hover:text-[#1B3C53] font-medium py-2 md:py-3 px-3 md:px-4 rounded-lg md:rounded-xl hover:bg-[#F9F3EF] transition-all duration-300"
+                className={getNavLinkClass("/", true)}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link
                 to="/products"
-                className="flex items-center space-x-3 text-[#456882] hover:text-[#1B3C53] font-medium py-2 md:py-3 px-3 md:px-4 rounded-lg md:rounded-xl hover:bg-[#F9F3EF] transition-all duration-300"
+                className={getNavLinkClass("/products", true)}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Our Products
               </Link>
               <Link
-                to="/bulk-order"
-                className="flex items-center space-x-3 text-[#456882] hover:text-[#1B3C53] font-medium py-2 md:py-3 px-3 md:px-4 rounded-lg md:rounded-xl hover:bg-[#F9F3EF] transition-all duration-300"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Bulk Orders
-              </Link>
-              <Link
                 to="/about"
-                className="flex items-center space-x-3 text-[#456882] hover:text-[#1B3C53] font-medium py-2 md:py-3 px-3 md:px-4 rounded-lg md:rounded-xl hover:bg-[#F9F3EF] transition-all duration-300"
+                className={getNavLinkClass("/about", true)}
                 onClick={() => setIsMenuOpen(false)}
               >
                 About Us
               </Link>
               <Link
                 to="/contact"
-                className="flex items-center space-x-3 text-[#456882] hover:text-[#1B3C53] font-medium py-2 md:py-3 px-3 md:px-4 rounded-lg md:rounded-xl hover:bg-[#F9F3EF] transition-all duration-300"
+                className={getNavLinkClass("/contact", true)}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact Us
@@ -420,15 +397,15 @@ const Header = () => {
                 <div className="border-t border-[#D2C1B6] pt-4 space-y-2">
                   <Link
                     to="/profile"
-                    className="flex items-center space-x-3 text-[#456882] hover:text-[#1B3C53] font-medium py-2 px-3 rounded-lg hover:bg-[#F9F3EF] transition-all duration-300"
+                    className={getNavLinkClass("/profile", true)}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="w-4 h-4" />
                     <span>My Profile</span>
                   </Link>
                   <Link
-                    to="/orders"
-                    className="flex items-center space-x-3 text-[#456882] hover:text-[#1B3C53] font-medium py-2 px-3 rounded-lg hover:bg-[#F9F3EF] transition-all duration-300"
+                    to="/my-orders"
+                    className={getNavLinkClass("/my-orders", true)}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Package className="w-4 h-4" />

@@ -35,6 +35,12 @@ const WarningToastOptions = {
   style: { background: "#fbbf24", color: "#000" },
 };
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("authToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 // Parse error messages
 const parseError = (error) => {
   if (error.response) {
@@ -51,7 +57,9 @@ export const getCartItems = async (dispatch) => {
   try {
     dispatch(fetchCartStart());
 
-    const response = await api.get("orders/cart");
+    const response = await api.get("orders/cart", {
+      headers: getAuthHeaders(),
+    });
     const cartData = response.data.cart || response.data;
 
     dispatch(fetchCartSuccess(cartData));
@@ -82,7 +90,9 @@ export const addToCart = async (dispatch, productData) => {
       specifications,
     };
 
-    const response = await api.post("orders/cart/add", payload);
+    const response = await api.post("orders/cart/add", payload, {
+      headers: getAuthHeaders(),
+    });
     const cartData = response.data.cart || response.data;
 
     dispatch(addToCartSuccess(cartData));
@@ -112,7 +122,9 @@ export const updateCartItem = async (dispatch, itemId, quantity) => {
 
     const payload = { quantity };
 
-    const response = await api.put(`orders/cart/update/${itemId}`, payload);
+    const response = await api.put(`orders/cart/update/${itemId}`, payload, {
+      headers: getAuthHeaders(),
+    });
     const cartData = response.data.cart || response.data;
 
     dispatch(updateCartSuccess(cartData));
@@ -136,7 +148,9 @@ export const removeFromCart = async (dispatch, itemId) => {
       throw new Error("Item ID is required");
     }
 
-    const response = await api.delete(`orders/cart/remove/${itemId}`);
+    const response = await api.delete(`orders/cart/remove/${itemId}`, {
+      headers: getAuthHeaders(),
+    });
     const cartData = response.data.cart || response.data;
 
     dispatch(removeFromCartSuccess(cartData));
@@ -156,7 +170,9 @@ export const clearCart = async (dispatch) => {
   try {
     dispatch(clearCartStart());
 
-    const response = await api.delete("orders/cart/clear");
+    const response = await api.delete("orders/cart/clear", {
+      headers: getAuthHeaders(),
+    });
     const result = response.data;
 
     dispatch(clearCartSuccess());
@@ -189,7 +205,9 @@ export const addMultipleToCart = async (dispatch, items) => {
 
     const payload = { items };
 
-    const response = await api.post("/cart/add-multiple", payload);
+    const response = await api.post("/cart/add-multiple", payload, {
+      headers: getAuthHeaders(),
+    });
     const cartData = response.data.cart || response.data;
 
     dispatch(addToCartSuccess(cartData));
@@ -207,7 +225,9 @@ export const addMultipleToCart = async (dispatch, items) => {
 // ✅ Get cart summary (totals, counts, etc.)
 export const getCartSummary = async (dispatch) => {
   try {
-    const response = await api.get("/cart/summary");
+    const response = await api.get("/cart/summary", {
+      headers: getAuthHeaders(),
+    });
     const summaryData = response.data.summary || response.data;
 
     return summaryData;
@@ -221,7 +241,13 @@ export const getCartSummary = async (dispatch) => {
 // ✅ Validate cart items (check stock, prices, etc.)
 export const validateCart = async (dispatch) => {
   try {
-    const response = await api.post("/cart/validate");
+    const response = await api.post(
+      "/cart/validate",
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     const validationResult = response.data;
 
     if (validationResult.hasIssues) {
@@ -248,7 +274,9 @@ export const applyCoupon = async (dispatch, couponCode) => {
 
     const payload = { couponCode: couponCode.trim().toUpperCase() };
 
-    const response = await api.post("/cart/apply-coupon", payload);
+    const response = await api.post("/cart/apply-coupon", payload, {
+      headers: getAuthHeaders(),
+    });
     const cartData = response.data.cart || response.data;
 
     dispatch(updateCartSuccess(cartData));
@@ -265,7 +293,13 @@ export const applyCoupon = async (dispatch, couponCode) => {
 // ✅ Remove coupon/discount code
 export const removeCoupon = async (dispatch) => {
   try {
-    const response = await api.post("/cart/remove-coupon");
+    const response = await api.post(
+      "/cart/remove-coupon",
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     const cartData = response.data.cart || response.data;
 
     dispatch(updateCartSuccess(cartData));
@@ -282,7 +316,13 @@ export const removeCoupon = async (dispatch) => {
 // ✅ Save cart for later (wishlist functionality)
 export const saveCartForLater = async (dispatch) => {
   try {
-    const response = await api.post("/cart/save-for-later");
+    const response = await api.post(
+      "/cart/save-for-later",
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     const result = response.data;
 
     toast.success("Cart saved for later!", SuccessToastOptions);
@@ -300,7 +340,13 @@ export const restoreSavedCart = async (dispatch) => {
   try {
     dispatch(fetchCartStart());
 
-    const response = await api.post("/cart/restore-saved");
+    const response = await api.post(
+      "/cart/restore-saved",
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     const cartData = response.data.cart || response.data;
 
     dispatch(fetchCartSuccess(cartData));
@@ -324,7 +370,9 @@ export const calculateShipping = async (dispatch, shippingAddress) => {
 
     const payload = { shippingAddress };
 
-    const response = await api.post("/cart/calculate-shipping", payload);
+    const response = await api.post("/cart/calculate-shipping", payload, {
+      headers: getAuthHeaders(),
+    });
     const shippingData = response.data.shipping || response.data;
 
     return shippingData;
@@ -340,7 +388,9 @@ export const estimateDelivery = async (dispatch, shippingMethod, address) => {
   try {
     const payload = { shippingMethod, address };
 
-    const response = await api.post("/cart/estimate-delivery", payload);
+    const response = await api.post("/cart/estimate-delivery", payload, {
+      headers: getAuthHeaders(),
+    });
     const deliveryData = response.data.delivery || response.data;
 
     return deliveryData;
@@ -362,7 +412,9 @@ export const updateCartItemSpecs = async (dispatch, itemId, specifications) => {
 
     const payload = { specifications };
 
-    const response = await api.put(`/cart/update-specs/${itemId}`, payload);
+    const response = await api.put(`/cart/update-specs/${itemId}`, payload, {
+      headers: getAuthHeaders(),
+    });
     const cartData = response.data.cart || response.data;
 
     dispatch(updateCartSuccess(cartData));
@@ -386,6 +438,7 @@ export const checkProductAvailability = async (productId, quantity) => {
 
     const response = await api.get(`/products/${productId}/availability`, {
       params: { quantity },
+      headers: getAuthHeaders(),
     });
 
     return response.data;

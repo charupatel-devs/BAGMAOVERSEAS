@@ -41,11 +41,9 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
   };
   const [formData, setFormData] = useState({
     name: "",
-    sku: "",
     description: "",
     category: "",
     price: "",
-    originalPrice: "",
     gst: "", // Add this line
     stock: "",
     minOrderQuantity: "",
@@ -515,7 +513,6 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
       // Validate required fields
       if (
         !formData.name ||
-        !formData.sku ||
         !formData.description ||
         !formData.category ||
         !formData.price ||
@@ -534,11 +531,9 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
 
       setFormData({
         name: "",
-        sku: "",
         description: "",
         category: "",
         price: "",
-        originalPrice: "",
         gst: "", // Add this line
         stock: "",
         minOrderQuantity: "",
@@ -564,7 +559,7 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
 
   const downloadCsvTemplate = () => {
     let csvHeaders =
-      "name,sku,description,category,price,originalPrice,gst,stock,minOrderQuantity,tags";
+      "name,description,category,price,gst,stock,minOrderQuantity,tags";
 
     if (categoryAttributes.length > 0) {
       const specHeaders = categoryAttributes
@@ -576,7 +571,7 @@ const AdminAddProduct = ({ initialMode = "single" }) => {
     const csvContent =
       csvHeaders +
       "\n" +
-      "Sample Product,SKU-001,Product description," +
+      "Sample Product,Product description," +
       formData.category +
       ',10.99,12.99,100,1,"tag1,tag2"' +
       (categoryAttributes.length > 0

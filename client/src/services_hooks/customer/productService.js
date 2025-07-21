@@ -36,6 +36,25 @@ export const getProducts = async (dispatch, filters = {}) => {
     );
   }
 };
+export const getFeaturedProducts = async (dispatch) => {
+  try {
+    dispatch(FetchProductsStart());
+    const limit = 6; // Adjust the limit as needed
+    const response = await api.get(`/products/featured?limit=${limit}`);
+    dispatch(
+      FetchProductsSuccess({
+        products: response.data.products,
+        mode: "list",
+      })
+    );
+  } catch (error) {
+    dispatch(
+      FetchProductsFailure(
+        error?.response?.data?.message || "Failed to fetch products"
+      )
+    );
+  }
+};
 
 // Fetch single product
 export const getProductById = async (dispatch, productId) => {

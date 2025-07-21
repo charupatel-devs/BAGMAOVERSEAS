@@ -2,7 +2,6 @@ import {
   CheckCircle,
   ChevronRight,
   Mail,
-  MapPin,
   MessageCircle,
   Phone,
   Send,
@@ -74,16 +73,6 @@ const ContactUs = () => {
             place bulk orders, and track your shipments online. No phone calls
             needed - our automated system handles everything for you.
           </p>
-          <div className="bg-[#F9F3EF] border border-[#D2C1B6] rounded-lg p-4 max-w-2xl mx-auto">
-            <p className="text-sm text-[#456882] font-medium">
-              🚀 <strong>Seamless Online Experience:</strong> Browse products →
-              Add to cart → Get instant quote → Place order
-            </p>
-            <p className="text-xs text-gray-600 mt-2">
-              Having trouble? Our professionals are here to help you complete
-              your order.
-            </p>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -122,9 +111,6 @@ const ContactUs = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button className="bg-[#D2C1B6] text-[#1B3C53] px-6 py-3 rounded-lg font-semibold hover:bg-[#F9F3EF] transition-colors flex-1">
                   Start Shopping Now
-                </button>
-                <button className="border-2 border-[#D2C1B6] text-[#D2C1B6] px-6 py-3 rounded-lg font-semibold hover:bg-[#D2C1B6] hover:text-[#1B3C53] transition-colors flex-1">
-                  View Bulk Pricing
                 </button>
               </div>
             </div>
@@ -311,7 +297,7 @@ const ContactUs = () => {
                     <p className="font-medium text-[#1B3C53]">
                       Emergency Support
                     </p>
-                    <p className="text-sm text-gray-600">+91-804-580-3379</p>
+                    <p className="text-sm text-gray-600">+91-8178145308</p>
                     <p className="text-xs text-green-600">
                       73% Call Response Rate
                     </p>
@@ -326,24 +312,11 @@ const ContactUs = () => {
                   <div>
                     <p className="font-medium text-[#1B3C53]">Email Support</p>
                     <p className="text-sm text-gray-600">
-                      support@bagmaoverseas.com
+                      bagmaoverseas@gmail.com
                     </p>
                     <p className="text-xs text-gray-500">
                       Response within 4 hours
                     </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <MessageCircle className="w-5 h-5 text-[#456882] mt-1 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-[#1B3C53]">Live Chat</p>
-                    <p className="text-sm text-gray-600">
-                      Instant assistance available
-                    </p>
-                    <button className="text-xs text-[#456882] hover:text-[#1B3C53] mt-1 underline">
-                      Start Chat Now
-                    </button>
                   </div>
                 </div>
               </div>
@@ -387,14 +360,7 @@ const ContactUs = () => {
                       Proprietorship
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Annual Turnover
-                    </p>
-                    <p className="text-sm font-medium text-[#1B3C53]">
-                      Rs. 5-10 Crore
-                    </p>
-                  </div>
+
                   <div>
                     <p className="text-xs text-gray-500 mb-1">GST Number</p>
                     <p className="text-sm font-medium text-[#1B3C53]">
@@ -457,22 +423,6 @@ const ContactUs = () => {
                     <p className="text-xs text-[#D2C1B6]">Skip phone queues</p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Map Section */}
-        <div className="mt-12">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-[#D2C1B6]/30">
-            <h3 className="text-xl font-bold text-[#1B3C53] mb-4">
-              Our Location
-            </h3>
-            <div className="bg-gray-200 rounded-lg h-64 md:h-80 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <MapPin className="w-12 h-12 mx-auto mb-2" />
-                <p className="text-sm">Interactive Map</p>
-                <p className="text-xs">Shiv Nagar, Panipat, Haryana</p>
               </div>
             </div>
           </div>

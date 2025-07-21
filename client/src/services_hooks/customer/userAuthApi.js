@@ -64,7 +64,6 @@ async function postWithRetry(endpoint, payload, maxRetries = 3, delay = 1000) {
   }
 }
 
-// Register User Service
 export const registerUser = async (dispatch, userData) => {
   dispatch(UserRegisterStart());
 
@@ -101,13 +100,10 @@ export const registerUser = async (dispatch, userData) => {
 
     // Make API call
     const { data } = await postWithRetry("/user/register", payload);
-    const userData = {
-      user: data.user,
-      token: token,
-    };
+    console.log("API response data:", data);
 
     // Success handling
-    dispatch(UserRegisterSuccess(userData));
+    dispatch(UserRegisterSuccess(data));
     toast.success("Account created successfully!", {
       id: "user-register",
       ...SuccessToastOptions,
@@ -128,7 +124,6 @@ export const registerUser = async (dispatch, userData) => {
     throw error;
   }
 };
-
 // Login User Service
 export const loginUser = async (dispatch, credentials) => {
   dispatch(UserLoginStart());
